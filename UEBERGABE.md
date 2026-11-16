@@ -85,21 +85,37 @@ Beim Ändern der Caddyfile beachten:
   `docker exec -w /etc/caddy bot-nbg1-caddy-1 caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`
 - Danach prüfen, ob Uptime-Kuma weiter 200 auf `wissen.investieredichfrei.de/status` bekommt (`docker logs bot-nbg1-caddy-1 | grep Uptime-Kuma`). Ein Abruf per curl bekommt dort 404, das ist normal.
 
-**Noch offen:** die Schlüssel in `/etc/aktien-copilot.env` eintragen (`ANTHROPIC_API_KEY`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_WEBHOOK_SECRET_TOKEN`), dann `systemctl restart aktien-copilot`.
+**Schlüssel eintragen:** Auf dem Server liegt `/usr/local/bin/copilot-schluessel` (Kopie im Repo: `deploy/copilot-schluessel.sh`). Es fragt die vier Schlüssel verdeckt ab (Enter = Wert bleibt), schreibt sie nach `/etc/aktien-copilot.env` und startet den Dienst neu. Vom MacBook aus:
+
+```bash
+ssh -t christianbolda@mac-mini-von-macmini.local "ssh -t -i ~/.ssh/idf_server -o IdentitiesOnly=yes root@91.98.174.199 /usr/local/bin/copilot-schluessel"
+```
+
+Stand 16.11.2026: die drei Zoom-Schlüssel sind eingetragen, `ANTHROPIC_API_KEY` fehlt noch.
+
+## 4a. Zoom (seit 16.11.2026 eingerichtet)
+
+**Wichtig:** Kontoinhaberin des IDF-Zoom-Kontos ist **Emilia**. Christian ist dort kein Admin; im Marketplace sind für ihn alle App-Arten gesperrt. Beide Apps wurden deshalb unter Emilias Anmeldung angelegt und lassen sich nur dort bearbeiten (Christian meldet sich dafür in Chrome als Emilia an).
+
+**RTMS-App** (General App, User-managed, nur Development), App-ID `iOHYdmyKT12fSHAugMnppA`:
+- Heißt bei Zoom noch **„General app 482“**. Den Namen sehen Teilnehmende bei der Zustimmung; unter Emilias Login umbenennen in „Aktien-Call-Copilot“.
+- Scopes: `meeting:read:meeting_transcript`, `meeting:read:meeting_chat`. Zoom hängt `meeting:read:meeting_audio` zwingend an und lässt es nicht abwählen. Der Code fordert deshalb beim Daten-Handshake nur Transkript und Chat an (`media_type` 8|16 = 24), damit kein Ton ankommt.
+- Event-Abo „Aktien-Call-Copilot RTMS“: `meeting.rtms_started`, `meeting.rtms_stopped` an `https://91-98-174-199.sslip.io/zoom/webhook`. Zoom hat beim Speichern **keine** URL-Validierung geschickt; der Server beantwortet sie, sobald sie kommt.
+- Produkt „Meetings“, Auto-Start-Vorgabe „Start for all meetings users own“, OAuth-Redirect `https://91-98-174-199.sslip.io/`.
+- Christian hat die App am 16.11. unter seinem Konto zugelassen (OAuth-Freigabe, ohne „shared access permissions“). In seinen Zoom-Einstellungen → Zoom Apps → „Automatisches Starten von Apps …“ steht sie mit „Owned“ (eigene Meetings), Teilnehmer „Always ask“.
+- Kontoeinstellung „Freigeben von Meeting-Inhalten in Echtzeit mit Apps“ war schon an.
+
+**Server-to-Server-App** „Aktien-Call-Copilot Aufzeichnungen“, App-ID `2A_KDbcTSWWYNG_yFRt8JA`, aktiviert:
+- Scopes: `cloud_recording:read:list_user_recordings:admin`, `cloud_recording:read:list_recording_files:admin`, `user:read:list_users:admin`.
+- Entwickler-Kontakt: Christian, IDF-Adresse; Firma Investiere Dich Frei GmbH.
+- Account ID, Client ID und Secret liegen nur in Zoom (App Credentials). Sie werden erst für den Downloader gebraucht.
 
 ## 5. Offene Aufgaben
 
-1. **Schlüssel auf bot-nbg1 eintragen** (Abschnitt 4, letzter Punkt).
-2. **Zoom-Apps** (Christian als Zoom-Admin, marketplace.zoom.us):
-   - **Server-to-Server-OAuth-App** zum Herunterladen von Emilias Aufzeichnungen. Scopes: `cloud_recording:read:list_user_recordings:admin`, `cloud_recording:read:list_recording_files:admin`, `user:read:list_users:admin`. Die Account ID darf in den Chat. Client ID und Secret gehen über das sichere Formular (`request_credential`, Host `zoom.us`, Typ basic).
-   - **General App (user-managed) mit RTMS** für den Live-Teil:
-     - Scopes: `meeting:read:meeting_transcript` und der RTMS-Chat-Scope, keine weiteren Medien.
-     - Events: `meeting.rtms_started` und `meeting.rtms_stopped`, Endpunkt ist die Webhook-URL.
-     - In den Kontoeinstellungen „Echtzeit-Meetinginhalte für Apps“ erlauben, bei Christian Auto-Start einschalten.
-     - Developer Pack mit Guthaben buchen. Laut Forum kostet es ca. 0,009 €/Min für den Stream und 0,018 €/Min für die Transkription; das ist nicht offiziell bestätigt.
-     - Christians Zoom-Anzeigename muss `TRAINER_NAMEN` enthalten (Standard „Christian“).
+1. **Developer Pack** bei Zoom mit Guthaben buchen (Christian). Ohne Guthaben kommen keine Echtzeit-Daten. Laut Forum ca. 0,009 €/Min für den Stream und 0,018 €/Min für die Transkription, nicht offiziell bestätigt.
+2. **`ANTHROPIC_API_KEY`** eintragen (Abschnitt 4), dann **Test-Meeting**: Christian hostet ein kurzes Meeting, Oberfläche offen, prüfen ob Mitschrift und Chat ankommen. Christians Zoom-Anzeigename muss `TRAINER_NAMEN` enthalten (Standard „Christian“). RTMS-App umbenennen (Abschnitt 4a).
 3. **Wissensdatenbank:**
-   - Downloader für Emilias Zoom-Aufzeichnungen schreiben: Transkripte (.vtt) nach `wissen/roh/calls/`, fehlt ein Transkript, den Ton transkribieren.
+   - Downloader für Emilias Zoom-Aufzeichnungen schreiben (Server-to-Server-App aus Abschnitt 4a; Zugangsdaten über `request_credential` bzw. verdeckt eingeben lassen): Transkripte (.vtt) nach `wissen/roh/calls/`, fehlt ein Transkript, den Ton transkribieren.
    - LearningSuite klären: API, Export oder Admin-Zugang zu den Videos. Lektionen nach `wissen/roh/kurs/<Modul>/<Lektion>`.
    - `TRAINERIN_NAMEN=Emilia node wissen/baue_index.mjs` ausführen.
    - Optional `wissen/kompendium.md` (nach Themen geordnet) mit Claude erzeugen.
@@ -122,4 +138,4 @@ Beim Ändern der Caddyfile beachten:
 
 ## 7. Startnachricht für den neuen Chat
 
-> Wir bauen den Aktien-Call-Copilot weiter (Repo `investiere-dich-frei/aktien-call-copilot`). Bitte lies zuerst `UEBERGABE.md` im Repo. Der Copilot läuft schon auf `bot-nbg1` (Abschnitt 4). Nächste Schritte: die Zoom-Apps anlegen, die Schlüssel auf dem Server eintragen und die Wissensdatenbank aufbauen (Abschnitt 5). SSH auf den Server geht nur über den Mac mini.
+> Wir bauen den Aktien-Call-Copilot weiter (Repo `investiere-dich-frei/aktien-call-copilot`). Bitte lies zuerst `UEBERGABE.md` im Repo. Der Copilot läuft schon auf `bot-nbg1` (Abschnitt 4). Die Zoom-Apps sind eingerichtet (Abschnitt 4a). Nächste Schritte: Developer Pack, `ANTHROPIC_API_KEY`, Test-Meeting und die Wissensdatenbank (Abschnitt 5). SSH auf den Server geht nur über den Mac mini; Zoom-Apps bearbeiten nur mit Emilias Login.

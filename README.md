@@ -97,3 +97,4 @@ Danach holt sich der Server alle 2 Minuten den neuesten Stand von `main`. Er sta
 | `public/index.html` | Oberfläche für den zweiten Bildschirm |
 | `deploy/install.sh` | einmalige Einrichtung auf dem Server |
 | `deploy/copilot-update.sh` | Auto-Update mit Tests (systemd-Timer) |
+| `deploy/copilot-schluessel.sh` | Schlüssel verdeckt in `/etc/aktien-copilot.env` eintragen |
