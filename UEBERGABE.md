@@ -98,7 +98,7 @@ Stand 16.11.2026: die drei Zoom-Schlüssel sind eingetragen, `ANTHROPIC_API_KEY`
 **Wichtig:** Kontoinhaberin des IDF-Zoom-Kontos ist **Emilia**. Christian ist dort kein Admin; im Marketplace sind für ihn alle App-Arten gesperrt. Beide Apps wurden deshalb unter Emilias Anmeldung angelegt und lassen sich nur dort bearbeiten (Christian meldet sich dafür in Chrome als Emilia an).
 
 **RTMS-App** (General App, User-managed, nur Development), App-ID `iOHYdmyKT12fSHAugMnppA`:
-- Heißt bei Zoom noch **„General app 482“**. Den Namen sehen Teilnehmende bei der Zustimmung; unter Emilias Login umbenennen in „Aktien-Call-Copilot“.
+- Heißt bei Zoom „Aktien-Call-Copilot“ (am 16.11. umbenannt, vorher „General app 482“).
 - Scopes: `meeting:read:meeting_transcript`, `meeting:read:meeting_chat`. Zoom hängt `meeting:read:meeting_audio` zwingend an und lässt es nicht abwählen. Der Code fordert deshalb beim Daten-Handshake nur Transkript und Chat an (`media_type` 8|16 = 24), damit kein Ton ankommt.
 - Event-Abo „Aktien-Call-Copilot RTMS“: `meeting.rtms_started`, `meeting.rtms_stopped` an `https://91-98-174-199.sslip.io/zoom/webhook`. Zoom hat beim Speichern **keine** URL-Validierung geschickt; der Server beantwortet sie, sobald sie kommt.
 - Produkt „Meetings“, Auto-Start-Vorgabe „Start for all meetings users own“, OAuth-Redirect `https://91-98-174-199.sslip.io/`.
@@ -112,8 +112,8 @@ Stand 16.11.2026: die drei Zoom-Schlüssel sind eingetragen, `ANTHROPIC_API_KEY`
 
 ## 5. Offene Aufgaben
 
-1. **Developer Pack** bei Zoom mit Guthaben buchen (Christian). Ohne Guthaben kommen keine Echtzeit-Daten. Laut Forum ca. 0,009 €/Min für den Stream und 0,018 €/Min für die Transkription, nicht offiziell bestätigt.
-2. **`ANTHROPIC_API_KEY`** eintragen (Abschnitt 4), dann **Test-Meeting**: Christian hostet ein kurzes Meeting, Oberfläche offen, prüfen ob Mitschrift und Chat ankommen. Christians Zoom-Anzeigename muss `TRAINER_NAMEN` enthalten (Standard „Christian“). RTMS-App umbenennen (Abschnitt 4a).
+1. **Developer Pack** ist seit 16.11.2026 in Emilias Zoom-Konto gebucht (nutzungsbasiert, 0 € vorab, monatliche Abrechnung über ihre Zahlungsmethode, kündbar unter zoom.us/billing). Die echten Minutenpreise stehen in der Bestätigungsmail bzw. unter zoom.us/billing; die Forumswerte (ca. 0,009 €/Min Stream, 0,018 €/Min Transkription) sind nicht bestätigt.
+2. **`ANTHROPIC_API_KEY`** eintragen (Abschnitt 4), dann **Test-Meeting**: Christian hostet ein kurzes Meeting, Oberfläche offen, prüfen ob Mitschrift und Chat ankommen. Christians Zoom-Anzeigename muss `TRAINER_NAMEN` enthalten (Standard „Christian“).
 3. **Wissensdatenbank:**
    - Downloader für Emilias Zoom-Aufzeichnungen schreiben (Server-to-Server-App aus Abschnitt 4a; Zugangsdaten über `request_credential` bzw. verdeckt eingeben lassen): Transkripte (.vtt) nach `wissen/roh/calls/`, fehlt ein Transkript, den Ton transkribieren.
    - LearningSuite klären: API, Export oder Admin-Zugang zu den Videos. Lektionen nach `wissen/roh/kurs/<Modul>/<Lektion>`.
@@ -138,4 +138,4 @@ Stand 16.11.2026: die drei Zoom-Schlüssel sind eingetragen, `ANTHROPIC_API_KEY`
 
 ## 7. Startnachricht für den neuen Chat
 
-> Wir bauen den Aktien-Call-Copilot weiter (Repo `investiere-dich-frei/aktien-call-copilot`). Bitte lies zuerst `UEBERGABE.md` im Repo. Der Copilot läuft schon auf `bot-nbg1` (Abschnitt 4). Die Zoom-Apps sind eingerichtet (Abschnitt 4a). Nächste Schritte: Developer Pack, `ANTHROPIC_API_KEY`, Test-Meeting und die Wissensdatenbank (Abschnitt 5). SSH auf den Server geht nur über den Mac mini; Zoom-Apps bearbeiten nur mit Emilias Login.
+> Wir bauen den Aktien-Call-Copilot weiter (Repo `investiere-dich-frei/aktien-call-copilot`). Bitte lies zuerst `UEBERGABE.md` im Repo. Der Copilot läuft schon auf `bot-nbg1` (Abschnitt 4). Die Zoom-Apps sind eingerichtet (Abschnitt 4a). Nächste Schritte: `ANTHROPIC_API_KEY`, Test-Meeting und die Wissensdatenbank (Abschnitt 5). SSH auf den Server geht nur über den Mac mini; Zoom-Apps bearbeiten nur mit Emilias Login.
