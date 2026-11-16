@@ -63,7 +63,8 @@ function fundstellenText(treffer) {
 export function baueAnfrage({ beitrag, verlauf, treffer, kompendium }) {
   const system = [{ type: 'text', text: SYSTEM }];
   if (kompendium) system.push({ type: 'text', text: `<kompendium>\n${kompendium}\n</kompendium>` });
-  system[system.length - 1].cache_control = { type: 'ephemeral' }; // fester Teil wird zwischengespeichert
+  // Fester Teil (Anweisung + Kompendium) wird eine Stunde zwischengespeichert: Fragen im Call kommen oft mit Pausen über 5 Minuten.
+  system[system.length - 1].cache_control = { type: 'ephemeral', ttl: '1h' };
   const user = `<verlauf>\n${verlauf.join('\n') || '(noch nichts)'}\n</verlauf>
 
 <fundstellen>

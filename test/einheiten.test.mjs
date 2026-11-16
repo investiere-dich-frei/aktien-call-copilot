@@ -99,6 +99,7 @@ test('Anfrage an Claude: keine Namen von Lernenden, Systemteil gecacht', () => {
   });
   assert.ok(!messages[0].content.includes('Max'));
   assert.equal(system.at(-1).cache_control.type, 'ephemeral');
+  assert.equal(system.at(-1).cache_control.ttl, '1h');
   assert.ok(messages[0].content.includes('titel="Kurs › Dividenden"'));
 });
 
