@@ -69,7 +69,17 @@ Das erzeugt `wissen/index.json`. Optional fasst `wissen/kompendium.md` das Wisse
 
 ## Betrieb
 
-RTMS braucht eine dauerhaft offene WebSocket-Verbindung, deshalb läuft das als kleiner Node-Server (Node 20+), nicht als Netlify-Funktion. Er sollte in Frankfurt stehen (z. B. Render, Fly.io oder Hetzner), hinter HTTPS. Der Server bedient Webhook und Oberfläche zugleich. `GET /health` ist der Gesundheitscheck.
+Der Copilot läuft als kleiner Node-Dienst auf `bot-nbg1` (Hetzner, Nürnberg). RTMS braucht eine Verbindung, die den ganzen Call offen bleibt, deshalb geht es nicht als Netlify-Funktion.
+
+Einrichtung, einmalig vom Mac aus:
+
+```bash
+ssh root@91.98.174.199 'bash -s' < deploy/install.sh
+```
+
+Das Skript bringt ein eigenes Node.js 22 nach `/opt/node22` mit; die Node-Version anderer Dienste bleibt unberührt. Es erzeugt einen Deploy-Schlüssel nur zum Lesen, legt den Dienst `aktien-copilot` auf `127.0.0.1:8765` an und richtet HTTPS über Caddy ein. Am Ende gibt es den Deploy-Schlüssel für GitHub, die Adresse der Oberfläche samt Zugangscode und die Webhook-URL für Zoom aus.
+
+Danach holt sich der Server alle 2 Minuten den neuesten Stand von `main`. Er startet nur neu, wenn alle Tests grün sind. Die Schlüssel stehen in `/etc/aktien-copilot.env` auf dem Server; nach einer Änderung `systemctl restart aktien-copilot` ausführen. Der Gesundheitscheck ist `GET /health`.
 
 ## Dateien
 
@@ -85,3 +95,5 @@ RTMS braucht eine dauerhaft offene WebSocket-Verbindung, deshalb läuft das als 
 | `server/simulator.mjs` | Testmodus: Aufzeichnung abspielen |
 | `wissen/baue_index.mjs` | baut `wissen/index.json` aus den Rohdaten |
 | `public/index.html` | Oberfläche für den zweiten Bildschirm |
+| `deploy/install.sh` | einmalige Einrichtung auf dem Server |
+| `deploy/copilot-update.sh` | Auto-Update mit Tests (systemd-Timer) |

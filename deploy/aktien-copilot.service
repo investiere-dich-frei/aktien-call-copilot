@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 EnvironmentFile=/etc/aktien-copilot.env
 WorkingDirectory=/opt/aktien-call-copilot
-ExecStart=/usr/bin/node server/index.mjs
+ExecStart=/opt/node22/bin/node server/index.mjs
 Restart=always
 RestartSec=3
 DynamicUser=yes
