@@ -52,12 +52,14 @@ export class Wissen {
 
   get groesse() { return this.abschnitte.length; }
 
-  suche(frage, k = 5) {
+  // filter (optional): nur Abschnitte, für die filter(abschnitt) true ergibt.
+  suche(frage, k = 5, filter = null) {
     const q = [...new Set(tokens(frage))];
     if (!q.length || !this.docs.length) return [];
     const N = this.docs.length, k1 = 1.4, b = 0.75;
     const treffer = [];
     this.docs.forEach((d, i) => {
+      if (filter && !filter(this.abschnitte[i])) return;
       let score = 0;
       for (const t of q) {
         const f = d.tf.get(t); if (!f) continue;
@@ -147,6 +149,31 @@ export function abschnitteAusText(text, quelle, maxWorte = 220) {
     const n = a.split(/\s+/).length;
     if (worte + n > maxWorte && akt.length) flush();
     akt.push(a); worte += n;
+  }
+  flush();
+  return out;
+}
+
+// Kompendium (Markdown aus wissen/kompendium/2_kapitel.mjs) in Suchabschnitte zerlegen:
+// je gebündelter Frage (####) ein Abschnitt, Regel- und Warnungsteile in Stücken, immer mit Kapitel als Kopf.
+export function abschnitteAusKompendium(md, maxWorte = 220) {
+  const out = [];
+  let kapitel = '', teil = '', puffer = [], frage = '';
+  const flush = () => {
+    const text = puffer.join('\n').trim(); puffer = [];
+    if (!text || !kapitel) return;
+    const kopf = [kapitel, teil, frage].filter(Boolean).join(' › ');
+    const quelle = { typ: 'kompendium', titel: 'Kompendium › ' + kopf };
+    if (frage) { out.push({ quelle: { ...quelle, stelle: frage }, text: `${kopf}\n${text}` }); return; }
+    for (const s of abschnitteAusText(text.replace(/\n(?=\s*[-*] |\*\*)/g, '\n\n'), quelle, maxWorte)) out.push({ ...s, text: `${kopf}\n${s.text}` });
+  };
+  for (const zeile of String(md).replace(/\r/g, '').split('\n')) {
+    const h = zeile.match(/^(#{2,4})\s+(.*)$/);
+    if (!h) { puffer.push(zeile); continue; }
+    flush();
+    if (h[1] === '##') { kapitel = h[2].trim(); teil = ''; frage = ''; }
+    else if (h[1] === '###') { teil = h[2].trim(); frage = ''; }
+    else frage = h[2].trim();
   }
   flush();
   return out;

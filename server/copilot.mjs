@@ -78,7 +78,12 @@ export class Copilot extends EventEmitter {
   async #bearbeite({ karte, verlauf }) {
     const start = Date.now();
     try {
-      const treffer = this.wissen.suche(karte.text + ' ' + verlauf.slice(-4).join(' '), 5);
+      // Erst das bereinigte Kompendium, dann die besten Stellen aus Kurs und Calls.
+      const q = karte.text + ' ' + verlauf.slice(-4).join(' ');
+      const treffer = [
+        ...this.wissen.suche(q, 3, (a) => a.quelle?.typ === 'kompendium'),
+        ...this.wissen.suche(q, 4, (a) => a.quelle?.typ !== 'kompendium'),
+      ];
       const hinweis = await this.coach.antworte({ beitrag: karte, verlauf, treffer });
       if (!this.karten.has(karte.id)) return; // inzwischen gelöscht (Notaus)
       if (!hinweis.ist_frage) { karte.status = 'verworfen'; }

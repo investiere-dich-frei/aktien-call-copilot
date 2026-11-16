@@ -5,7 +5,7 @@
 // Aufruf: node wissen/baue_index.mjs [rohordner] [ausgabe.json]
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseVtt, anonymisiere, abschnitteAusCues, abschnitteAusText } from '../server/wissen.mjs';
+import { parseVtt, anonymisiere, abschnitteAusCues, abschnitteAusText, abschnitteAusKompendium } from '../server/wissen.mjs';
 
 const roh = path.resolve(process.argv[2] ?? 'wissen/roh');
 const ziel = path.resolve(process.argv[3] ?? 'wissen/index.json');
@@ -46,8 +46,15 @@ for (const datei of mitUnternehmen ? dateien(path.join(roh, 'unternehmen')) : []
   abschnitte.push(...abschnitteAusText(fs.readFileSync(datei, 'utf8'), quelle)); statistik.unternehmen = (statistik.unternehmen ?? 0) + 1;
 }
 
+// Kompendium (bereinigtes Wissen, aus wissen/kompendium/2_kapitel.mjs): <rohordner>/kompendium.md
+const kompendiumDatei = path.join(roh, 'kompendium.md');
+if (fs.existsSync(kompendiumDatei)) {
+  const neu = abschnitteAusKompendium(fs.readFileSync(kompendiumDatei, 'utf8'));
+  abschnitte.push(...neu); statistik.kompendium = neu.length;
+}
+
 abschnitte.forEach((a, i) => { a.id = `a${i + 1}`; });
 fs.mkdirSync(path.dirname(ziel), { recursive: true });
 fs.writeFileSync(ziel, JSON.stringify({ erstellt: new Date().toISOString(), abschnitte }, null, 1));
 const worte = abschnitte.reduce((s, a) => s + a.text.split(/\s+/).length, 0);
-console.log(`${statistik.kurs} Kurs-Dateien, ${statistik.calls} Calls, ${statistik.unternehmen ?? 0} Unternehmen →${abschnitte.length} Abschnitte, ca. ${worte.toLocaleString('de-DE')} Wörter → ${path.relative(process.cwd(), ziel)}`);
+console.log(`${statistik.kurs} Kurs-Dateien, ${statistik.calls} Calls, ${statistik.unternehmen ?? 0} Unternehmen, ${statistik.kompendium ?? 0} Kompendium-Einträge → ${abschnitte.length} Abschnitte, ca. ${worte.toLocaleString('de-DE')} Wörter → ${path.relative(process.cwd(), ziel)}`);

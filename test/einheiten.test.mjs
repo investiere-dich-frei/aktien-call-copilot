@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { pruefeSignatur, signiere, urlValidierung } from '../server/webhook.mjs';
 import { istFrage, pruefeRegeln, aehnlichkeit } from '../server/fragen.mjs';
-import { Wissen, parseVtt, anonymisiere, abschnitteAusCues, abschnitteAusText, tokens } from '../server/wissen.mjs';
+import { Wissen, parseVtt, anonymisiere, abschnitteAusCues, abschnitteAusText, abschnitteAusKompendium, tokens } from '../server/wissen.mjs';
 import { parseChat, zeitleiste } from '../server/simulator.mjs';
 import { chatText, signatur } from '../server/zoom-rtms.mjs';
 import { baueAnfrage } from '../server/coach.mjs';
@@ -110,4 +110,15 @@ test('Langes Transkript ohne Absätze wird in handliche Abschnitte geteilt', () 
   assert.ok(teile.length >= 10);
   for (const t of teile) assert.ok(t.text.split(/\s+/).length <= 230);
   assert.equal(teile[0].quelle.stelle, 'Teil 1');
+});
+
+test('Kompendium: je Frage ein Abschnitt, Suche lässt sich auf das Kompendium filtern', () => {
+  const md = `# Titel\n\n## Depot-Management\n\n### Emilias Regeln\n- Ab 20 % Gewinn Stop-Loss 5 % darunter setzen.\n\n### Häufige Fragen\n#### Wann setze ich den Stop-Loss? (12× gefragt)\n**Antwort:** Ab 20 % Plus, Abstand 5 %.\n\n#### Wie oft nachziehen? (3× gefragt)\n**Antwort:** Einmal am Tag.\n`;
+  const teile = abschnitteAusKompendium(md);
+  assert.equal(teile.length, 3);
+  assert.equal(teile[1].quelle.stelle, 'Wann setze ich den Stop-Loss? (12× gefragt)');
+  assert.ok(teile[1].text.startsWith('Depot-Management › Häufige Fragen'));
+  const w = new Wissen([...teile, { quelle: { typ: 'kurs', titel: 'Kurs › 6.5' }, text: 'Stop-Loss setzen im Kurs' }]);
+  const nurKompendium = w.suche('Stop-Loss', 5, (a) => a.quelle.typ === 'kompendium');
+  assert.ok(nurKompendium.length >= 1 && nurKompendium.every((t) => t.quelle.typ === 'kompendium'));
 });
