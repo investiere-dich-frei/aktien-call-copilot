@@ -1,0 +1,3 @@
+TESTDATEN. Das Kurs-Gewinn-Verhältnis (KGV) teilt den Aktienkurs durch den Gewinn je Aktie. Es zeigt, wie viele Jahresgewinne man für die Aktie bezahlt.
+
+Ein KGV vergleicht man immer innerhalb derselben Branche. Ein niedriges KGV allein bedeutet nicht, dass eine Aktie günstig ist.

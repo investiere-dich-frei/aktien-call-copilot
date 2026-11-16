@@ -1,0 +1,6 @@
+node_modules/
+.env
+# Rohdaten der Wissensdatenbank (Downloads, Transkripte) nie committen
+wissen/roh/
+wissen/index.json
+wissen/kompendium.md

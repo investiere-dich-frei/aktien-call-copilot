@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aktien-Call-Copilot</title>
+<style>
+:root { --bg:#f6f5f2; --karte:#fff; --text:#1d1d1b; --leise:#6b6a66; --linie:#e2e0da; --akzent:#1f6f5c; --gelb:#b7791f; --rot:#b42318; --gelb-bg:#fdf6e7; --rot-bg:#fdecea; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#141413; --karte:#1f1f1d; --text:#ecebe7; --leise:#9c9a94; --linie:#33322f; --akzent:#5fbf9f; --gelb:#e0a43a; --rot:#f0705f; --gelb-bg:#2d2615; --rot-bg:#33191a; } }
+* { box-sizing:border-box; }
+body { margin:0; font:16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
+header { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--linie); position:sticky; top:0; background:var(--bg); z-index:2; }
+header h1 { font-size:17px; margin:0 8px 0 0; }
+.punkt { width:10px; height:10px; border-radius:50%; background:var(--leise); display:inline-block; margin-right:6px; }
+.punkt.live { background:var(--akzent); box-shadow:0 0 0 4px color-mix(in srgb, var(--akzent) 25%, transparent); }
+#statusText { color:var(--leise); font-size:14px; }
+.rechts { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
+button { font:inherit; font-size:14px; padding:6px 12px; border-radius:8px; border:1px solid var(--linie); background:var(--karte); color:var(--text); cursor:pointer; }
+button.notaus { border-color:var(--rot); color:var(--rot); font-weight:600; }
+main { display:grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap:16px; padding:16px; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--leise); margin:0 0 8px; }
+.karte { background:var(--karte); border:1px solid var(--linie); border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+.karte.neu { border-color:var(--akzent); }
+.karte .kopf { display:flex; gap:8px; align-items:baseline; color:var(--leise); font-size:13px; flex-wrap:wrap; }
+.karte .frage { font-size:20px; font-weight:600; margin:4px 0 8px; }
+.karte ul { margin:6px 0; padding-left:20px; font-size:18px; }
+.karte .satz { font-size:18px; border-left:3px solid var(--akzent); padding-left:10px; margin:10px 0 6px; }
+.karte .meta { font-size:13px; color:var(--leise); }
+.karte .aktionen { display:flex; gap:8px; margin-top:10px; }
+.etikett { font-size:12px; padding:1px 8px; border-radius:99px; border:1px solid var(--linie); }
+.etikett.mehr { border-color:var(--akzent); color:var(--akzent); font-weight:600; }
+.warnung { background:var(--rot-bg); color:var(--rot); border-radius:8px; padding:6px 10px; margin-top:8px; font-size:15px; }
+.luecke { background:var(--gelb-bg); color:var(--gelb); border-radius:8px; padding:6px 10px; margin-top:8px; font-size:15px; }
+.erledigt { opacity:.55; }
+.erledigt .frage { font-size:16px; }
+#mitschrift { background:var(--karte); border:1px solid var(--linie); border-radius:12px; padding:10px 12px; max-height:60vh; overflow:auto; font-size:14px; }
+#mitschrift p { margin:0 0 6px; }
+#mitschrift .wer { color:var(--leise); }
+#mitschrift .chat .wer { color:var(--akzent); }
+#regeln .karte { border-color:var(--rot); background:var(--rot-bg); }
+.leer { color:var(--leise); font-size:15px; }
+details { margin-top:16px; font-size:14px; }
+details label { display:block; margin:6px 0; }
+body.fokus aside, body.fokus .erledigt, body.fokus details { display:none; }
+body.fokus main { grid-template-columns:1fr; }
+body.fokus .karte .frage { font-size:24px; }
+body.fokus .karte ul, body.fokus .karte .satz { font-size:21px; }
+#anmelden { max-width:420px; margin:15vh auto; padding:0 16px; }
+#anmelden input { width:100%; font:inherit; padding:8px; border-radius:8px; border:1px solid var(--linie); background:var(--karte); color:var(--text); }
+</style>
+</head>
+<body>
+<section id="anmelden" hidden>
+  <h1>Aktien-Call-Copilot</h1>
+  <p>Zugangscode eingeben:</p>
+  <form id="anmeldeForm"><input id="tokenFeld" type="password" autocomplete="current-password"> <p><button>Anmelden</button></p></form>
+</section>
+
+<div id="app" hidden>
+<header>
+  <h1>Aktien-Call-Copilot</h1>
+  <span><span id="punkt" class="punkt"></span><span id="statusText">verbinde …</span></span>
+  <div class="rechts">
+    <button id="fokusBtn" title="Nur offene Fragen, große Schrift">Fokus</button>
+    <button id="notausBtn" class="notaus" title="Stoppt Zoom-Stream und Test, löscht Mitschrift und Fragen">Notaus</button>
+  </div>
+</header>
+<main>
+  <section>
+    <h2>Fragen</h2>
+    <div id="karten"><p class="leer">Noch keine Fragen. Sobald jemand im Call oder im Chat etwas fragt, erscheint hier ein Hinweis.</p></div>
+  </section>
+  <aside>
+    <div id="regeln"></div>
+    <h2>Mitschrift</h2>
+    <div id="mitschrift"><p class="leer">Wartet auf den Zoom-Stream …</p></div>
+    <details>
+      <summary>Testmodus: Aufzeichnung abspielen</summary>
+      <label>Transkript (.vtt) <input id="vttDatei" type="file" accept=".vtt,.txt"></label>
+      <label>Zoom-Chat (.txt, optional) <input id="chatDatei" type="file" accept=".txt"></label>
+      <label>Tempo <select id="tempo"><option value="1">1×</option><option value="4" selected>4×</option><option value="10">10×</option></select></label>
+      <button id="simBtn">Abspielen</button> <span id="simInfo" class="meta"></span>
+    </details>
+  </aside>
+</main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let token = '';
+try { token = sessionStorage.getItem('coachToken') || ''; } catch {}
+const hashToken = new URLSearchParams(location.hash.slice(1)).get('token');
+if (hashToken) { token = hashToken; history.replaceState(null, '', location.pathname); }
+
+const karten = new Map();
+const mitschrift = [];
+const zuletztNeu = new Set();
+
+function speichereToken(t) { token = t; try { sessionStorage.setItem('coachToken', t); } catch {} }
+function api(pfad, body) {
+  return fetch(pfad, { method: body ? 'POST' : 'GET', headers: { authorization: 'Bearer ' + token, 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+}
+function el(tag, attrs = {}, ...kinder) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+  for (const k of kinder.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return e;
+}
+function uhrzeit(ms) { return new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
+
+async function start() {
+  if (!token) { $('anmelden').hidden = false; return; }
+  const r = await api('/api/status');
+  if (r.status === 401) { try { sessionStorage.removeItem('coachToken'); } catch {} token = ''; $('anmelden').hidden = false; return; }
+  speichereToken(token);
+  $('anmelden').hidden = true; $('app').hidden = false;
+  verbinde();
+}
+
+function verbinde() {
+  const es = new EventSource('/api/stream?token=' + encodeURIComponent(token));
+  es.onmessage = (m) => verarbeite(JSON.parse(m.data));
+  es.onerror = () => { $('statusText').textContent = 'Verbindung unterbrochen, verbinde neu …'; $('punkt').className = 'punkt'; };
+}
+
+let status = {};
+function zeigeStatus() {
+  const live = (status.streams || []).includes('live');
+  $('punkt').className = 'punkt' + (live || status.simulation ? ' live' : '');
+  const teile = [
+    live ? 'Zoom live' : status.simulation ? 'Testmodus läuft' : 'Zoom: ' + (status.zoom || '–'),
+    'KI: ' + (status.ki || '–'),
+    'Wissen: ' + (status.wissen ?? 0) + ' Abschnitte' + (status.kompendium ? ' + Kompendium' : ''),
+  ];
+  $('statusText').textContent = teile.join(' · ');
+}
+
+function verarbeite(e) {
+  if (e.typ === 'start') {
+    status = e.status; zeigeStatus();
+    karten.clear(); e.karten.forEach((k) => karten.set(k.id, k));
+    mitschrift.length = 0; mitschrift.push(...e.mitschrift);
+    zeichneKarten(); zeichneMitschrift();
+  } else if (e.typ === 'karte') {
+    if (!karten.has(e.karte.id)) zuletztNeu.add(e.karte.id);
+    karten.set(e.karte.id, e.karte); zeichneKarten();
+  } else if (e.typ === 'mitschrift') {
+    mitschrift.push(e.zeile); if (mitschrift.length > 200) mitschrift.shift(); zeichneMitschrift();
+  } else if (e.typ === 'regel') {
+    zeigeRegel(e);
+  } else if (e.typ === 'zoom') {
+    status.streams = e.zustand === 'beendet' ? [] : [e.zustand]; zeigeStatus();
+  } else if (e.typ === 'geleert') {
+    karten.clear(); mitschrift.length = 0; $('regeln').replaceChildren(); zeichneKarten(); zeichneMitschrift();
+  }
+}
+
+function zeichneKarten() {
+  const liste = [...karten.values()].filter((k) => k.status !== 'verworfen');
+  const rang = { offen: 0, pruefe: 1, fehler: 2, beantwortet: 3 };
+  liste.sort((a, b) => (rang[a.status] - rang[b.status]) || (b.mehrfach - a.mehrfach) || (b.erstellt - a.erstellt));
+  const box = $('karten');
+  if (!liste.length) { box.replaceChildren(el('p', { class: 'leer' }, 'Noch keine Fragen. Sobald jemand im Call oder im Chat etwas fragt, erscheint hier ein Hinweis.')); return; }
+  box.replaceChildren(...liste.map(karteEl));
+  setTimeout(() => zuletztNeu.clear(), 4000);
+}
+
+function karteEl(k) {
+  const h = k.hinweis;
+  const wer = (k.namen && k.namen.length > 1 ? k.namen.join(', ') : k.name) + (k.art === 'chat' ? ' im Chat' : ' (gesprochen)');
+  const kopf = el('div', { class: 'kopf' }, el('span', {}, uhrzeit(k.erstellt) + ' · ' + wer),
+    k.mehrfach > 1 && el('span', { class: 'etikett mehr' }, k.mehrfach + '× gefragt'),
+    h && el('span', { class: 'etikett' }, h.thema));
+  const klasse = 'karte' + (k.status === 'beantwortet' ? ' erledigt' : '') + (zuletztNeu.has(k.id) ? ' neu' : '');
+  if (k.status === 'pruefe') return el('div', { class: klasse }, kopf, el('div', { class: 'frage' }, k.text), el('div', { class: 'meta' }, 'Claude bereitet einen Hinweis vor …'));
+  if (k.status === 'fehler') return el('div', { class: klasse }, kopf, el('div', { class: 'frage' }, k.text), el('div', { class: 'luecke' }, 'Kein Hinweis: ' + k.fehler), aktionen(k));
+  return el('div', { class: klasse }, kopf,
+    el('div', { class: 'frage' }, h.frage || k.text),
+    k.status !== 'beantwortet' && [
+      el('ul', {}, h.antwort_stichpunkte.map((s) => el('li', {}, s))),
+      h.antwort_satz && el('div', { class: 'satz' }, '„' + h.antwort_satz + '“'),
+      h.rueckfrage && el('div', { class: 'meta' }, 'Rückfrage: ' + h.rueckfrage),
+      h.abgedeckt === 'nicht_enthalten' && el('div', { class: 'luecke' }, 'Nicht in Kurs oder Calls enthalten. Lieber mitnehmen oder nachfragen.'),
+      h.warnung && el('div', { class: 'warnung' }, '⚠ ' + h.warnung),
+      h.quellen.length > 0 && el('div', { class: 'meta' }, 'Quelle: ' + h.quellen.map((q) => q.titel + (q.stelle ? ' (' + q.stelle + ')' : '')).join(' · ')),
+    ],
+    aktionen(k));
+}
+
+function aktionen(k) {
+  const setze = (s) => () => api('/api/karte/' + k.id, { status: s });
+  return el('div', { class: 'aktionen' },
+    k.status === 'beantwortet' ? el('button', { onclick: setze('offen') }, 'Wieder öffnen') : el('button', { onclick: setze('beantwortet') }, '✓ Beantwortet'),
+    k.status !== 'beantwortet' && el('button', { onclick: setze('verworfen') }, 'Ausblenden'));
+}
+
+function zeichneMitschrift() {
+  const box = $('mitschrift');
+  const unten = box.scrollTop + box.clientHeight >= box.scrollHeight - 30;
+  if (!mitschrift.length) { box.replaceChildren(el('p', { class: 'leer' }, 'Wartet auf den Zoom-Stream …')); return; }
+  box.replaceChildren(...mitschrift.slice(-120).map((z) => el('p', { class: z.art }, el('span', { class: 'wer' }, (z.trainer ? 'Du' : z.name) + (z.art === 'chat' ? ' (Chat)' : '') + ': '), z.text)));
+  if (unten) box.scrollTop = box.scrollHeight;
+}
+
+function zeigeRegel(e) {
+  const k = el('div', { class: 'karte' }, el('div', { class: 'kopf' }, uhrzeit(e.zeit) + ' · Regelwächter'),
+    e.treffer.map((t) => el('div', {}, (t.stufe === 'rot' ? '🔴 ' : '🟡 ') + t.hinweis)),
+    el('div', { class: 'meta' }, '„' + e.text + '“'));
+  $('regeln').prepend(k);
+  while ($('regeln').children.length > 3) $('regeln').lastChild.remove();
+  setTimeout(() => k.remove(), 60_000);
+}
+
+$('anmeldeForm').addEventListener('submit', (ev) => { ev.preventDefault(); speichereToken($('tokenFeld').value.trim()); start(); });
+$('fokusBtn').addEventListener('click', () => document.body.classList.toggle('fokus'));
+$('notausBtn').addEventListener('click', async () => {
+  if (!confirm('Notaus: Zoom-Stream und Test stoppen, Mitschrift und Fragen löschen?')) return;
+  await api('/api/notaus', {});
+});
+$('simBtn').addEventListener('click', async () => {
+  const vtt = $('vttDatei').files[0] ? await $('vttDatei').files[0].text() : '';
+  const chat = $('chatDatei').files[0] ? await $('chatDatei').files[0].text() : '';
+  if (!vtt && !chat) { $('simInfo').textContent = 'Bitte eine Datei wählen.'; return; }
+  const r = await api('/api/simulation', { vtt, chat, tempo: $('tempo').value });
+  const d = await r.json();
+  $('simInfo').textContent = r.ok ? `${d.anzahl} Beiträge, ca. ${Math.ceil(d.dauerSek / 60)} Min.` : d.fehler;
+  if (r.ok) { status.simulation = true; zeigeStatus(); }
+});
+start();
+</script>
+</body>
+</html>

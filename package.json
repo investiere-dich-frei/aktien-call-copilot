@@ -1,0 +1,20 @@
+{
+  "name": "aktien-call-copilot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Live-Coach für Aktien-Coaching-Calls über Zoom RTMS",
+  "scripts": {
+    "start": "node server/index.mjs",
+    "mock": "COPILOT_MOCK=1 node server/index.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
+    "ws": "^8.23.0",
+    "zod": "^4.6.7"
+  }
+}
