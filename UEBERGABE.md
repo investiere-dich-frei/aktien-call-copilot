@@ -115,20 +115,15 @@ Stand 16.11.2026: die drei Zoom-Schlüssel sind eingetragen, `ANTHROPIC_API_KEY`
 - Symptom: Im Meeting zeigt die App „Von Ihnen aktiviert“, Auto-Start greift nicht; „Starten“ → „Verbindung wird hergestellt…“ → zurück auf „Starten“. Zoom ruft den Server nie auf, auch keine URL-Validierung. Server und Signaturprüfung sind getestet und korrekt.
 - Ursache laut Zoom-Support (Chat 16.11.): **RTMS muss von Zoom für das Konto freigeschaltet werden** (Formular `https://www.zoom.com/en/realtime-media-streams/#form`). Antrag am 16.11. abgeschickt (Kontakt Christian). Zoom meldet sich nach der Freigabe. Offen: ob die App dafür veröffentlicht werden muss oder Development/Local test reicht (Frage an Zoom-Entwicklersupport / devforum.zoom.us).
 - Das Zoom-Programm auf dem MacBook muss angemeldet sein; Meetings über „Neues Meeting“ starten, nicht im Raum eines anderen Kontos.
-- Auf dem Server liegt nur die Beispiel-Wissensdatenbank (`/var/lib/aktien-copilot/wissen/index.json`, gesetzt über `WISSEN_INDEX` in `/etc/aktien-copilot.env`). Testmodus mit Claude funktioniert (Fragen, Regelwächter, Antwortkarten mit Quelle).
+- Wissensdatenbank seit 16.11.2026 auf dem Server: Kurs aus „IDF Emma“ plus 151 Live-Calls (Emilia Advanced/Coaching, Sarah Basic), 11.150 Abschnitte. Wie sie gebaut und aktualisiert wird: `wissen/AKTUALISIEREN.md`. Testlauf mit Claude liefert Antworten mit Lektionen als Quelle.
 - Zugriff: Ist das MacBook nicht im Heimnetz, den Mac mini über Tailscale (`100.124.116.34`) statt `mac-mini-von-macmini.local` nehmen. Log-Mitschnitt für Tests: `/root/copilot-watch.sh <Sekunden>` auf dem Server.
 
 ## 5. Offene Aufgaben
 
 1. **Developer Pack** ist seit 16.11.2026 in Emilias Zoom-Konto gebucht (nutzungsbasiert, 0 € vorab, monatliche Abrechnung über ihre Zahlungsmethode, kündbar unter zoom.us/billing). Die echten Minutenpreise stehen in der Bestätigungsmail bzw. unter zoom.us/billing; die Forumswerte (ca. 0,009 €/Min Stream, 0,018 €/Min Transkription) sind nicht bestätigt.
 2. **RTMS-Freischaltung durch Zoom abwarten** (Abschnitt 4a, Stand 16.11. abends). `ANTHROPIC_API_KEY` ist eingetragen. Danach **Test-Meeting**: Christian hostet ein kurzes Meeting, Oberfläche offen, prüfen ob Mitschrift und Chat ankommen. Christians Zoom-Anzeigename muss `TRAINER_NAMEN` enthalten (Standard „Christian“).
-3. **Wissensdatenbank:**
-   - Downloader für Emilias Zoom-Aufzeichnungen schreiben (Server-to-Server-App aus Abschnitt 4a; Zugangsdaten über `request_credential` bzw. verdeckt eingeben lassen): Transkripte (.vtt) nach `wissen/roh/calls/`, fehlt ein Transkript, den Ton transkribieren.
-   - LearningSuite klären: API, Export oder Admin-Zugang zu den Videos. Lektionen nach `wissen/roh/kurs/<Modul>/<Lektion>`.
-   - `TRAINERIN_NAMEN=Emilia node wissen/baue_index.mjs` ausführen.
-   - Optional `wissen/kompendium.md` (nach Themen geordnet) mit Claude erzeugen.
-   - `wissen/roh/`, `index.json` und `kompendium.md` sind in `.gitignore` und müssen getrennt auf den Server.
-4. **Claude live testen**, sobald ein `ANTHROPIC_API_KEY` da ist. In der Cloud-Umgebung dafür `api.anthropic.com` freigeben.
+3. **Wissensdatenbank:** erledigt am 16.11.2026 (siehe `wissen/AKTUALISIEREN.md`). Offen: regelmäßig neue Calls nachladen (z. B. monatlich), optional `wissen/kompendium.md`.
+4. **Claude live testen:** im Testmodus erledigt (16.11.2026); live erst nach RTMS-Freischaltung.
 5. **Eigene Domain** statt sslip.io, z. B. `copilot.<domain>`: DNS-Eintrag auf 91.98.174.199 setzen und den Abschnitt in der Caddyfile des Wissens-Bots umbenennen (siehe Abschnitt 4). `COPILOT_DOMAIN` in `install.sh` greift hier nicht, weil das Skript den Docker-Caddy nicht anfasst.
 6. **Rechtliches:**
    - Ansage an die Lernenden zu Beginn des Calls, rechtlich prüfen lassen.
@@ -146,4 +141,4 @@ Stand 16.11.2026: die drei Zoom-Schlüssel sind eingetragen, `ANTHROPIC_API_KEY`
 
 ## 7. Startnachricht für den neuen Chat
 
-> Wir bauen den Aktien-Call-Copilot weiter (Repo `investiere-dich-frei/aktien-call-copilot`). Bitte lies zuerst `UEBERGABE.md` im Repo. Der Copilot läuft schon auf `bot-nbg1` (Abschnitt 4). Die Zoom-Apps sind eingerichtet (Abschnitt 4a). Nächste Schritte: RTMS-Freischaltung durch Zoom abwarten (Abschnitt 4a), dann Test-Meeting und die Wissensdatenbank (Abschnitt 5). SSH auf den Server geht nur über den Mac mini; Zoom-Apps bearbeiten nur mit Emilias Login.
+> Wir bauen den Aktien-Call-Copilot weiter (Repo `investiere-dich-frei/aktien-call-copilot`). Bitte lies zuerst `UEBERGABE.md` im Repo. Der Copilot läuft schon auf `bot-nbg1` (Abschnitt 4). Die Zoom-Apps sind eingerichtet (Abschnitt 4a). Nächste Schritte: RTMS-Freischaltung durch Zoom abwarten (Abschnitt 4a), dann Test-Meeting. Die Wissensdatenbank steht (wissen/AKTUALISIEREN.md). SSH auf den Server geht nur über den Mac mini; Zoom-Apps bearbeiten nur mit Emilias Login.
