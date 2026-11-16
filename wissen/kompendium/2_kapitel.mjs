@@ -71,7 +71,7 @@ if (offen.length) {
       custom_id: id,
       params: {
         model: MODELL_KAPITEL,
-        max_tokens: 64000,
+        max_tokens: 128000,
         system: SYSTEM,
         output_config: { effort: 'high' },
         messages: [{ role: 'user', content: `Thema: ${name}\nUmfang: ${beschreibung}\n\n<regeln anzahl="${proThema[id].regeln.length}">\n${proThema[id].regeln.join('\n')}\n</regeln>\n\n<fragen anzahl="${proThema[id].fragen.length}">\n${proThema[id].fragen.join('\n\n')}\n</fragen>` }],
