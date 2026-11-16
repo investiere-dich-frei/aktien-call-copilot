@@ -122,7 +122,7 @@ Stand 16.11.2026: die drei Zoom-Schlüssel sind eingetragen, `ANTHROPIC_API_KEY`
 
 1. **Developer Pack** ist seit 16.11.2026 in Emilias Zoom-Konto gebucht (nutzungsbasiert, 0 € vorab, monatliche Abrechnung über ihre Zahlungsmethode, kündbar unter zoom.us/billing). Die echten Minutenpreise stehen in der Bestätigungsmail bzw. unter zoom.us/billing; die Forumswerte (ca. 0,009 €/Min Stream, 0,018 €/Min Transkription) sind nicht bestätigt.
 2. **RTMS-Freischaltung durch Zoom abwarten** (Abschnitt 4a, Stand 16.11. abends). `ANTHROPIC_API_KEY` ist eingetragen. Danach **Test-Meeting**: Christian hostet ein kurzes Meeting, Oberfläche offen, prüfen ob Mitschrift und Chat ankommen. Christians Zoom-Anzeigename muss `TRAINER_NAMEN` enthalten (Standard „Christian“).
-3. **Wissensdatenbank:** erledigt am 16.11.2026 (siehe `wissen/AKTUALISIEREN.md`). Offen: regelmäßig neue Calls nachladen (z. B. monatlich), optional `wissen/kompendium.md`.
+3. **Wissensdatenbank und Kompendium:** erledigt am 16.11.2026 (siehe `wissen/AKTUALISIEREN.md`): Kurs, 151 Calls, Coach-Kompendium (14 Kapitel, 440 gebündelte Fragen, als Suche eingebunden), Unternehmens-Register (546 Unternehmen, im Co-Trainer noch aus). Offen: Emilia prüft die Abschnitte „Widersprüche und offene Punkte“; rechtliche Freigabe für das Register; neue Calls regelmäßig nachladen.
 4. **Claude live testen:** im Testmodus erledigt (16.11.2026); live erst nach RTMS-Freischaltung.
 5. **Eigene Domain** statt sslip.io, z. B. `copilot.<domain>`: DNS-Eintrag auf 91.98.174.199 setzen und den Abschnitt in der Caddyfile des Wissens-Bots umbenennen (siehe Abschnitt 4). `COPILOT_DOMAIN` in `install.sh` greift hier nicht, weil das Skript den Docker-Caddy nicht anfasst.
 6. **Rechtliches:**
