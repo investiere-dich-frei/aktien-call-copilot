@@ -148,9 +148,10 @@ function lies(req) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT || 8765);
+  const host = process.env.HOST || '0.0.0.0';
   const { server, token, stop } = erstelleServer();
-  server.listen(port, () => {
-    console.log(`Aktien-Call-Copilot läuft auf http://localhost:${port}`);
+  server.listen(port, host, () => {
+    console.log(`Aktien-Call-Copilot läuft auf http://${host}:${port}`);
     if (!process.env.COACH_TOKEN) console.log(`Kein COACH_TOKEN gesetzt. Zugang für diese Sitzung: http://localhost:${port}/#token=${token}`);
   });
   for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { stop(); process.exit(0); });

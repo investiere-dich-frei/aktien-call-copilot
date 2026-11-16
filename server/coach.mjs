@@ -73,6 +73,7 @@ ${beitrag.text}
 
 export function erstelleCoach({ apiKey = process.env.ANTHROPIC_API_KEY, mock = process.env.COPILOT_MOCK === '1', kompendium = '' } = {}) {
   if (mock) return { modell: 'testmodus', antworte: async (a) => mockHinweis(a) };
+  if (!apiKey) return { modell: 'nicht eingerichtet', antworte: async () => { throw new Error('ANTHROPIC_API_KEY fehlt auf dem Server'); } };
   const client = new Anthropic({ apiKey, timeout: 20_000, maxRetries: 1 });
   return {
     modell: MODELL,

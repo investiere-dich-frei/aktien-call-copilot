@@ -1,0 +1,20 @@
+[Unit]
+Description=Aktien-Call-Copilot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/etc/aktien-copilot.env
+WorkingDirectory=/opt/aktien-call-copilot
+ExecStart=/usr/bin/node server/index.mjs
+Restart=always
+RestartSec=3
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadOnlyPaths=/opt/aktien-call-copilot
+
+[Install]
+WantedBy=multi-user.target

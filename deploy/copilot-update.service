@@ -1,0 +1,6 @@
+[Unit]
+Description=Aktien-Call-Copilot aktualisieren
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/copilot-update
