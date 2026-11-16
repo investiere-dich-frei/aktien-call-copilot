@@ -68,7 +68,7 @@ Regeln:
 export function dokumente(roh, trainerin = ['Emilia Bolda', 'Sarah Klein']) {
   const out = [];
   const liste = (o) => fs.existsSync(o) ? fs.readdirSync(o, { withFileTypes: true }).flatMap((e) => {
-    const p = path.join(o, e.name); return e.isDirectory() ? liste(p) : [p];
+    const p = path.join(o, e.name); return e.name.startsWith('._') ? [] : e.isDirectory() ? liste(p) : [p];
   }).sort() : [];
   for (const d of liste(path.join(roh, 'calls')).filter((p) => p.endsWith('.vtt'))) {
     const name = path.basename(d, '.vtt');
