@@ -114,7 +114,7 @@ test('Zoom-RTMS bis zur Fragekarte', async () => {
     assert.ok(zoom.log.signal.some((m) => m.msg_type === 13 && m.timestamp === 111), 'Keep-alive Signaling');
     assert.ok(zoom.log.signal.some((m) => m.msg_type === 7 && m.rtms_stream_id === 's1'), 'CLIENT_READY_ACK');
     const hs = zoom.log.media.find((m) => m.msg_type === 3);
-    assert.equal(hs.media_type, 32);
+    assert.equal(hs.media_type, 24); // nur Transkript (8) und Chat (16), kein Ton/Video
     assert.equal(hs.media_params.transcript.src_language, 14);
     assert.ok(zoom.log.media.some((m) => m.msg_type === 13 && m.timestamp === 222), 'Keep-alive Media');
 

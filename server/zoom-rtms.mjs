@@ -100,12 +100,12 @@ export class RtmsClient extends EventEmitter {
     const media = new this.WebSocketImpl(url);
     s.sockets.push(media);
     media.on('open', () => {
-      // "all" liefert genau die Medien, für die die App Scopes hat. Die App bekommt nur
-      // Transkript- und Chat-Scopes, also kommen weder Ton noch Video bei uns an.
+      // Nur Transkript und Chat anfordern (Bitmaske 8|16). Zoom hängt an den Transkript-Scope
+      // zwingend meeting:read:meeting_audio an; mit "all" käme deshalb auch der Ton mit.
       media.send(JSON.stringify({
         msg_type: MSG.DATA_HANDSHAKE_REQ, protocol_version: 1, sequence: 0,
         meeting_uuid: s.meetingUuid, rtms_stream_id: s.streamId, signature: this.sig(s.meetingUuid, s.streamId),
-        media_type: MEDIA.ALL,
+        media_type: MEDIA.TRANSCRIPT | MEDIA.CHAT,
         media_params: { transcript: { content_type: 5, src_language: this.sprache, enable_lid: !this.spracheFest } },
       }));
     });
