@@ -64,9 +64,11 @@ const offen = THEMEN.filter(([id]) => neu || !fs.existsSync(path.join(kapitelOrd
   .filter(([id]) => proThema[id].fragen.length + proThema[id].regeln.length > 0);
 for (const [id, name] of THEMEN) console.log(`${name}: ${proThema[id].fragen.length} Fragen, ${proThema[id].regeln.length} Regeln`);
 
-const client = new Anthropic();
-if (offen.length) {
-  const batch = await client.messages.batches.create({
+const client = new Anthropic({ timeout: 120_000 });
+// --batch <id>: Ergebnisse eines schon laufenden Batches abholen, statt einen neuen zu starten.
+const vorhandenerBatch = process.argv.includes('--batch') ? process.argv[process.argv.indexOf('--batch') + 1] : '';
+if (offen.length || vorhandenerBatch) {
+  const batch = vorhandenerBatch ? { id: vorhandenerBatch } : await client.messages.batches.create({
     requests: offen.map(([id, name, beschreibung]) => ({
       custom_id: id,
       params: {
@@ -78,7 +80,7 @@ if (offen.length) {
       },
     })),
   });
-  console.log('Batch', batch.id, 'gestartet für', offen.length, 'Themen');
+  console.log('Batch', batch.id, vorhandenerBatch ? 'wird abgeholt' : 'gestartet für ' + offen.length + ' Themen');
   let b;
   for (;;) {
     b = await client.messages.batches.retrieve(batch.id);
