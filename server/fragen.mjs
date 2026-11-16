@@ -25,7 +25,7 @@ export function aehnlichkeit(a, b) {
 }
 
 // Regelwächter: rot = darf so nicht gesagt werden, gelb = Hinweis.
-// Gilt für den Trainer (Christian), nicht für Lernende. Vor dem Live-Einsatz per Rückwärtstest prüfen.
+// Gilt für die Leitung des Calls (TRAINER_NAMEN), nicht für Lernende. Vor dem Live-Einsatz per Rückwärtstest prüfen.
 export const REGELN = [
   { id: 'anlageberatung', stufe: 'rot', re: /\b(kauf|kauft|kaufen sie|verkauf|verkauft|nimm|nehmt) (jetzt |unbedingt |sofort )?(die|diese|den|das)? ?(aktie|position|etf|titel)\b|\b(an deiner|an eurer|an ihrer) stelle würde ich\b|\bich würde (jetzt|sofort|unbedingt) (kaufen|verkaufen|einsteigen|aussteigen)\b/i,
     text: 'Klingt nach individueller Anlageempfehlung. Besser: Kriterien erklären, Entscheidung bleibt bei der Person.' },

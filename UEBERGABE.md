@@ -24,7 +24,7 @@ Vorlage war der IDF Sales-Copilot (`Investiere-Dich-Frei-GmbH/idf-sales-copilot`
 | Repo | Privat bei Christian: `investiere-dich-frei/aktien-call-copilot` |
 | KI | Claude `claude-opus-5-5`, `effort: low`, strukturierte Ausgabe (Zod), Ausweichmodell bei Ablehnung über `fallbacks: 'default'`, Systemanweisung zwischengespeichert |
 
-## 3. Was fertig ist (im Repo, 12 Tests grün)
+## 3. Was fertig ist (im Repo, 14 Tests grün)
 
 - **Zoom-Anbindung** (`server/zoom-rtms.mjs`, `server/webhook.mjs`): RTMS-Protokoll nach der offiziellen Zoom-Doku, mit Signaturprüfung der Webhooks, Keep-alive und Neuverbindung. Es werden nur Mitschrift und öffentlicher Chat angefordert, kein Ton, kein Video.
 - **Fragen-Erkennung** (`server/fragen.mjs`):
@@ -121,7 +121,8 @@ Stand 16.11.2026: die drei Zoom-Schlüssel sind eingetragen, `ANTHROPIC_API_KEY`
 ## 5. Offene Aufgaben
 
 1. **Developer Pack** ist seit 16.11.2026 in Emilias Zoom-Konto gebucht (nutzungsbasiert, 0 € vorab, monatliche Abrechnung über ihre Zahlungsmethode, kündbar unter zoom.us/billing). Die echten Minutenpreise stehen in der Bestätigungsmail bzw. unter zoom.us/billing; die Forumswerte (ca. 0,009 €/Min Stream, 0,018 €/Min Transkription) sind nicht bestätigt.
-2. **RTMS-Freischaltung durch Zoom abwarten** (Abschnitt 4a, Stand 16.11. abends). `ANTHROPIC_API_KEY` ist eingetragen. Danach **Test-Meeting**: Christian hostet ein kurzes Meeting, Oberfläche offen, prüfen ob Mitschrift und Chat ankommen. Christians Zoom-Anzeigename muss `TRAINER_NAMEN` enthalten (Standard „Christian“).
+2. **RTMS-Freischaltung durch Zoom abwarten** (Abschnitt 4a, Stand 16.11. abends). `ANTHROPIC_API_KEY` ist eingetragen. Danach **Test-Meeting**: Christian hostet ein kurzes Meeting, Oberfläche offen, prüfen ob Mitschrift und Chat ankommen. Christians Zoom-Anzeigename muss `TRAINER_NAMEN` enthalten (Standard und Server: „Christian,Emilia,Sarah“).
+   **Danach Testlauf bei Emilia im Advanced Call (dienstags)**, beschlossen am 16.11.2026: Emilia lässt die App einmal in ihrem Zoom zu (liegt schon in ihrem Konto) und stellt Autostart ein oder klickt im Call „Starten“. Karten auf einem zweiten Gerät oder Christian schaut mit. Emilia sagt zu Beginn kurz an, dass ein KI-Assistent mitliest; Datenschutzhinweis vorher prüfen lassen. Der Server verarbeitet Meetings aller Personen, die die App zugelassen haben; der Prompt ist seit 16.11. neutral (Emilia, Sarah oder Christian leiten).
 3. **Wissensdatenbank und Kompendium:** erledigt am 16.11.2026 (siehe `wissen/AKTUALISIEREN.md`): Kurs, 151 Calls, Coach-Kompendium (14 Kapitel, 440 gebündelte Fragen, als Suche eingebunden), Unternehmens-Register (546 Unternehmen, im Co-Trainer noch aus). Offen: Emilia prüft die Abschnitte „Widersprüche und offene Punkte“; rechtliche Freigabe für das Register; neue Calls regelmäßig nachladen.
 4. **Claude live testen:** im Testmodus erledigt (16.11.2026); live erst nach RTMS-Freischaltung.
 5. **Eigene Domain** statt sslip.io, z. B. `copilot.<domain>`: DNS-Eintrag auf 91.98.174.199 setzen und den Abschnitt in der Caddyfile des Wissens-Bots umbenennen (siehe Abschnitt 4). `COPILOT_DOMAIN` in `install.sh` greift hier nicht, weil das Skript den Docker-Caddy nicht anfasst.

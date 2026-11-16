@@ -27,7 +27,7 @@ export function erstelleServer(cfg = {}) {
   const wissen = cfg.wissen ?? Wissen.laden(env.WISSEN_INDEX || path.join(WURZEL, 'wissen/index.json'));
   const kompendium = ladeKompendium(env.WISSEN_KOMPENDIUM || path.join(WURZEL, 'wissen/kompendium.md'));
   const coach = cfg.coach ?? erstelleCoach({ kompendium });
-  const copilot = new Copilot({ coach, wissen, trainerNamen: (env.TRAINER_NAMEN || 'Christian').split(',').map((s) => s.trim()) });
+  const copilot = new Copilot({ coach, wissen, trainerNamen: (env.TRAINER_NAMEN || 'Christian,Emilia,Sarah').split(',').map((s) => s.trim()) });
 
   const zoomBereit = Boolean(env.ZOOM_CLIENT_ID && env.ZOOM_CLIENT_SECRET && env.ZOOM_WEBHOOK_SECRET_TOKEN);
   const rtms = env.ZOOM_CLIENT_ID && env.ZOOM_CLIENT_SECRET
