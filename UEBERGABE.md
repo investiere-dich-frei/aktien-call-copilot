@@ -54,32 +54,42 @@ COPILOT_MOCK=1 COACH_TOKEN=demo npm start
 
 Dann `http://localhost:8765/#token=demo` öffnen.
 
-## 4. Wo es hängt: Installation auf bot-nbg1
+## 4. Stand auf bot-nbg1 (seit 16.11.2026 installiert)
 
-Das Installationsskript ist **noch nicht ausgeführt**. Es muss als root per SSH auf `bot-nbg1` laufen:
+`install.sh` ist ausgeführt, der Deploy-Schlüssel ist in GitHub eingetragen, der Dienst `aktien-copilot` läuft und zieht sich `main` alle 2 Minuten.
+
+- Oberfläche: `https://91-98-174-199.sslip.io/#token=…` (Token steht als `COACH_TOKEN` in `/etc/aktien-copilot.env` auf dem Server)
+- Zoom-Webhook: `https://91-98-174-199.sslip.io/zoom/webhook` (antwortet ohne gültige Signatur mit 401, so soll es sein)
+- Zertifikat: Let's Encrypt, holt Caddy selbst
+
+**Zugang per SSH:** Nur vom **Mac mini** aus. Bei Hetzner ist nur dessen Schlüssel hinterlegt, das MacBook wird abgelehnt. Vom MacBook geht es über den Mac mini im selben Netz:
 
 ```bash
-ssh root@91.98.174.199 'bash -s' < deploy/install.sh
+ssh christianbolda@mac-mini-von-macmini.local
+ssh -i ~/.ssh/idf_server root@91.98.174.199
 ```
 
-Bisherige Hürden:
+Die Hetzner-Firewall `idf-wissen-bot` (ID 11937052) lässt Port 22 nur von Christians fester IP (`89.182.201.84`) zu. Wechselt die IP, nur die Regel für Port 22 per Hetzner-API anpassen; 80 und 443 bleiben offen.
 
-1. **Firewall:** Die Hetzner-Firewall `idf-wissen-bot` (ID 11937052) lässt SSH nur von einer festen IP zu. Sie wurde auf Christians aktuelle IP `89.182.201.84` umgestellt. Wechselt die IP, muss die Regel per Hetzner-API angepasst werden. Nur die Regel für Port 22 ändern, 80 und 443 bleiben offen.
-2. **SSH-Schlüssel:** Das MacBook wird abgelehnt („Permission denied (publickey)“). Bei Hetzner ist nur der Schlüssel `christian-macmini` hinterlegt. Lösungen:
-   - **Am einfachsten:** vom **Mac mini** ausführen.
-   - Oder in der Hetzner-Webkonsole als root anmelden (Root-Passwort über „Rescue“ zurücksetzen) und den MacBook-Schlüssel an `/root/.ssh/authorized_keys` **anhängen**.
-   - Oder (von Claude vorgeschlagen, noch nicht gemacht): Root-Passwort per API zurücksetzen und die Konsole per API (`request_console`) selbst bedienen.
-3. Das Skript gibt am Ende aus:
-   - den **Deploy-Schlüssel**: Christian trägt ihn unter https://github.com/investiere-dich-frei/aktien-call-copilot/settings/keys/new ein, ohne Schreibrecht. Claude darf über die GitHub-API keine Schlüssel anlegen.
-   - die **Adresse der Oberfläche**: `https://91-98-174-199.sslip.io/#token=…`
-   - die **Webhook-URL**: `https://91-98-174-199.sslip.io/zoom/webhook`
-4. Ports 80 und 443 sind auf bot-nbg1 offen; vermutlich läuft dort schon ein Webserver. Steht in der Zeile „Fertig. Webserver:“ etwas wie „Port 80/443 belegt von nginx“, muss die HTTPS-Einbindung angepasst werden.
+**HTTPS läuft über den Caddy des Wissens-Bots, nicht über einen eigenen.** Auf bot-nbg1 belegt der Docker-Container `bot-nbg1-caddy-1` die Ports 80/443. Er bedient auch `wissen.investieredichfrei.de` (Teams-Nachrichten, Content-Agent, Zentrale). `install.sh` erkennt das und ändert dort nichts; die Einbindung wurde von Hand gemacht:
 
-Danach die Schlüssel auf dem Server in `/etc/aktien-copilot.env` eintragen (`ANTHROPIC_API_KEY`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_WEBHOOK_SECRET_TOKEN`) und `systemctl restart aktien-copilot` ausführen.
+- `/opt/idf-wissen-bot/deploy/bot-nbg1/Caddyfile`: Abschnitt `91-98-174-199.sslip.io` angehängt, `reverse_proxy 172.18.0.1:8765`. Die Fassung davor liegt als `Caddyfile.vor-copilot` daneben.
+- `/etc/aktien-copilot.env`: `HOST=172.18.0.1` (Gateway des Docker-Netzes `bot-nbg1_intern`), damit der Container den Copilot erreicht. Von außen bleibt 8765 zu.
+- ufw: `allow from 172.18.0.0/16 to 172.18.0.1 port 8765 proto tcp`.
+
+Beim Ändern der Caddyfile beachten:
+
+- Die Datei ist als Einzeldatei in den Container gemountet. Nur anhängen oder mit `cat > Caddyfile` überschreiben, **nie `sed -i`**: Das legt eine neue Datei an, und der Container sieht weiter die alte.
+- Vor dem Laden prüfen, dann ohne Neustart laden:
+  `docker exec bot-nbg1-caddy-1 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile`
+  `docker exec -w /etc/caddy bot-nbg1-caddy-1 caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`
+- Danach prüfen, ob Uptime-Kuma weiter 200 auf `wissen.investieredichfrei.de/status` bekommt (`docker logs bot-nbg1-caddy-1 | grep Uptime-Kuma`). Ein Abruf per curl bekommt dort 404, das ist normal.
+
+**Noch offen:** die Schlüssel in `/etc/aktien-copilot.env` eintragen (`ANTHROPIC_API_KEY`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_WEBHOOK_SECRET_TOKEN`), dann `systemctl restart aktien-copilot`.
 
 ## 5. Offene Aufgaben
 
-1. **Installation auf bot-nbg1** abschließen (Abschnitt 4).
+1. **Schlüssel auf bot-nbg1 eintragen** (Abschnitt 4, letzter Punkt).
 2. **Zoom-Apps** (Christian als Zoom-Admin, marketplace.zoom.us):
    - **Server-to-Server-OAuth-App** zum Herunterladen von Emilias Aufzeichnungen. Scopes: `cloud_recording:read:list_user_recordings:admin`, `cloud_recording:read:list_recording_files:admin`, `user:read:list_users:admin`. Die Account ID darf in den Chat. Client ID und Secret gehen über das sichere Formular (`request_credential`, Host `zoom.us`, Typ basic).
    - **General App (user-managed) mit RTMS** für den Live-Teil:
@@ -95,7 +105,7 @@ Danach die Schlüssel auf dem Server in `/etc/aktien-copilot.env` eintragen (`AN
    - Optional `wissen/kompendium.md` (nach Themen geordnet) mit Claude erzeugen.
    - `wissen/roh/`, `index.json` und `kompendium.md` sind in `.gitignore` und müssen getrennt auf den Server.
 4. **Claude live testen**, sobald ein `ANTHROPIC_API_KEY` da ist. In der Cloud-Umgebung dafür `api.anthropic.com` freigeben.
-5. **Eigene Domain** statt sslip.io, z. B. `copilot.<domain>`: in `install.sh` über `COPILOT_DOMAIN` steuerbar.
+5. **Eigene Domain** statt sslip.io, z. B. `copilot.<domain>`: DNS-Eintrag auf 91.98.174.199 setzen und den Abschnitt in der Caddyfile des Wissens-Bots umbenennen (siehe Abschnitt 4). `COPILOT_DOMAIN` in `install.sh` greift hier nicht, weil das Skript den Docker-Caddy nicht anfasst.
 6. **Rechtliches:**
    - Ansage an die Lernenden zu Beginn des Calls, rechtlich prüfen lassen.
    - AV-Vertrag mit Anthropic.
@@ -107,8 +117,9 @@ Danach die Schlüssel auf dem Server in `/etc/aktien-copilot.env` eintragen (`AN
 
 - Die Cloud-Umgebung **„aktien-call-copilot“** erlaubt Zoom-Hosts (`developers.zoom.us`, `api.zoom.us`, `zoom.us`, `marketplace.zoom.us`, `devforum.zoom.us`) und `api.hetzner.cloud`.
 - **Achtung:** Der Hetzner-API-Schlüssel (`HCLOUD_TOKEN`) liegt als Umgebungsvariable nur in der Umgebung **„Default“**. In einer neuen Sitzung auf „aktien-call-copilot“ fehlt er. Lösung: ihn über `request_credential` für `api.hetzner.cloud` als Netzwerk-Geheimnis in „aktien-call-copilot“ speichern lassen.
+- Für SSH auf bot-nbg1 siehe Abschnitt 4 (nur über den Mac mini).
 - Eine Cloud-Sitzung kann **nicht** auf Christians Mac, Chrome oder per SSH auf Server zugreifen. Für SSH, Browser und lokale Dateien besser eine Sitzung **auf dem Mac** starten: Claude-Desktop-App mit Chrome-Erweiterung oder `claude remote-control`.
 
 ## 7. Startnachricht für den neuen Chat
 
-> Wir bauen den Aktien-Call-Copilot weiter (Repo `investiere-dich-frei/aktien-call-copilot`). Bitte lies zuerst `UEBERGABE.md` im Repo. Nächster Schritt: das Installationsskript auf dem Hetzner-Server `bot-nbg1` (91.98.174.199) ausführen, siehe Abschnitt 4, und danach die Zoom-Apps und die Wissensdatenbank aufbauen (Abschnitt 5).
+> Wir bauen den Aktien-Call-Copilot weiter (Repo `investiere-dich-frei/aktien-call-copilot`). Bitte lies zuerst `UEBERGABE.md` im Repo. Der Copilot läuft schon auf `bot-nbg1` (Abschnitt 4). Nächste Schritte: die Zoom-Apps anlegen, die Schlüssel auf dem Server eintragen und die Wissensdatenbank aufbauen (Abschnitt 5). SSH auf den Server geht nur über den Mac mini.

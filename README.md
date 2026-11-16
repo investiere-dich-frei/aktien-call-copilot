@@ -77,7 +77,7 @@ Einrichtung, einmalig vom Mac aus:
 ssh root@91.98.174.199 'bash -s' < deploy/install.sh
 ```
 
-Das Skript bringt ein eigenes Node.js 22 nach `/opt/node22` mit; die Node-Version anderer Dienste bleibt unberührt. Es erzeugt einen Deploy-Schlüssel nur zum Lesen, legt den Dienst `aktien-copilot` auf `127.0.0.1:8765` an und richtet HTTPS über Caddy ein. Am Ende gibt es den Deploy-Schlüssel für GitHub, die Adresse der Oberfläche samt Zugangscode und die Webhook-URL für Zoom aus.
+Das Skript bringt ein eigenes Node.js 22 nach `/opt/node22` mit; die Node-Version anderer Dienste bleibt unberührt. Es erzeugt einen Deploy-Schlüssel nur zum Lesen, legt den Dienst `aktien-copilot` auf `127.0.0.1:8765` an und richtet HTTPS über Caddy ein. Auf bot-nbg1 läuft HTTPS stattdessen über den Docker-Caddy des Wissens-Bots, der Dienst lauscht dort auf `172.18.0.1:8765` (Details in `UEBERGABE.md`, Abschnitt 4). Am Ende gibt es den Deploy-Schlüssel für GitHub, die Adresse der Oberfläche samt Zugangscode und die Webhook-URL für Zoom aus.
 
 Danach holt sich der Server alle 2 Minuten den neuesten Stand von `main`. Er startet nur neu, wenn alle Tests grün sind. Die Schlüssel stehen in `/etc/aktien-copilot.env` auf dem Server; nach einer Änderung `systemctl restart aktien-copilot` ausführen. Der Gesundheitscheck ist `GET /health`.
 
