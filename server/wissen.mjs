@@ -130,7 +130,17 @@ export function abschnitteAusCues(cues, quelle, maxWorte = 220) {
 
 // Fließtext (Kurs-Skript, Notizen) an Absätzen in Abschnitte teilen.
 export function abschnitteAusText(text, quelle, maxWorte = 220) {
-  const absaetze = String(text).replace(/\r/g, '').split(/\n\s*\n/).map((a) => a.trim()).filter(Boolean);
+  const absaetze = String(text).replace(/\r/g, '').split(/\n\s*\n/).map((a) => a.trim()).filter(Boolean)
+    // Zu lange Absätze (z. B. Video-Transkripte ohne Umbrüche) an Satzgrenzen zerlegen.
+    .flatMap((a) => a.split(/\s+/).length <= maxWorte ? [a] : a.split(/(?<=[.!?])\s+/))
+    // Stücke ohne Satzzeichen notfalls hart nach Wortzahl teilen.
+    .flatMap((a) => {
+      const w = a.split(/\s+/);
+      if (w.length <= maxWorte) return [a];
+      const out = [];
+      for (let i = 0; i < w.length; i += maxWorte) out.push(w.slice(i, i + maxWorte).join(' '));
+      return out;
+    });
   const out = []; let akt = [], worte = 0, nr = 1;
   const flush = () => { if (akt.length) { out.push({ quelle: { ...quelle, stelle: `Teil ${nr++}` }, text: akt.join('\n\n') }); akt = []; worte = 0; } };
   for (const a of absaetze) {

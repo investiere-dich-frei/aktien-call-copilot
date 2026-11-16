@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { pruefeSignatur, signiere, urlValidierung } from '../server/webhook.mjs';
 import { istFrage, pruefeRegeln, aehnlichkeit } from '../server/fragen.mjs';
-import { Wissen, parseVtt, anonymisiere, abschnitteAusCues, tokens } from '../server/wissen.mjs';
+import { Wissen, parseVtt, anonymisiere, abschnitteAusCues, abschnitteAusText, tokens } from '../server/wissen.mjs';
 import { parseChat, zeitleiste } from '../server/simulator.mjs';
 import { chatText, signatur } from '../server/zoom-rtms.mjs';
 import { baueAnfrage } from '../server/coach.mjs';
@@ -100,4 +100,13 @@ test('Anfrage an Claude: keine Namen von Lernenden, Systemteil gecacht', () => {
   assert.ok(!messages[0].content.includes('Max'));
   assert.equal(system.at(-1).cache_control.type, 'ephemeral');
   assert.ok(messages[0].content.includes('titel="Kurs › Dividenden"'));
+});
+
+test('Langes Transkript ohne Absätze wird in handliche Abschnitte geteilt', () => {
+  const satz = 'Die Stop-Loss-Order sichert deinen Gewinn ab, sobald der Kurs gestiegen ist. ';
+  const text = satz.repeat(200); // ca. 2.400 Wörter, ein einziger Absatz
+  const teile = abschnitteAusText(text, { typ: 'kurs', titel: 'Test' });
+  assert.ok(teile.length >= 10);
+  for (const t of teile) assert.ok(t.text.split(/\s+/).length <= 230);
+  assert.equal(teile[0].quelle.stelle, 'Teil 1');
 });
