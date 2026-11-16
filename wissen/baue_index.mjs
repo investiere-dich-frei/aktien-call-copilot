@@ -39,7 +39,9 @@ for (const datei of dateien(path.join(roh, 'calls'))) {
 }
 
 // Unternehmens-Register (aus wissen/kompendium/3_unternehmen.mjs): frühere Aussagen je Unternehmen.
-for (const datei of dateien(path.join(roh, 'unternehmen'))) {
+// Nur mit MIT_UNTERNEHMEN=1 im Index, damit der Co-Trainer es erst nach rechtlicher Freigabe nutzt.
+const mitUnternehmen = process.env.MIT_UNTERNEHMEN === '1';
+for (const datei of mitUnternehmen ? dateien(path.join(roh, 'unternehmen')) : []) {
   const quelle = { typ: 'unternehmen', titel: 'Unternehmen › ' + path.basename(datei).replace(/\.(txt|md)$/i, '') };
   abschnitte.push(...abschnitteAusText(fs.readFileSync(datei, 'utf8'), quelle)); statistik.unternehmen = (statistik.unternehmen ?? 0) + 1;
 }
