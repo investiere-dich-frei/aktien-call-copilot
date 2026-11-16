@@ -38,8 +38,14 @@ for (const datei of dateien(path.join(roh, 'calls'))) {
   abschnitte.push(...abschnitteAusCues(cues, quelle)); statistik.calls++;
 }
 
+// Unternehmens-Register (aus wissen/kompendium/3_unternehmen.mjs): frühere Aussagen je Unternehmen.
+for (const datei of dateien(path.join(roh, 'unternehmen'))) {
+  const quelle = { typ: 'unternehmen', titel: 'Unternehmen › ' + path.basename(datei).replace(/\.(txt|md)$/i, '') };
+  abschnitte.push(...abschnitteAusText(fs.readFileSync(datei, 'utf8'), quelle)); statistik.unternehmen = (statistik.unternehmen ?? 0) + 1;
+}
+
 abschnitte.forEach((a, i) => { a.id = `a${i + 1}`; });
 fs.mkdirSync(path.dirname(ziel), { recursive: true });
 fs.writeFileSync(ziel, JSON.stringify({ erstellt: new Date().toISOString(), abschnitte }, null, 1));
 const worte = abschnitte.reduce((s, a) => s + a.text.split(/\s+/).length, 0);
-console.log(`${statistik.kurs} Kurs-Dateien, ${statistik.calls} Calls → ${abschnitte.length} Abschnitte, ca. ${worte.toLocaleString('de-DE')} Wörter → ${path.relative(process.cwd(), ziel)}`);
+console.log(`${statistik.kurs} Kurs-Dateien, ${statistik.calls} Calls, ${statistik.unternehmen ?? 0} Unternehmen →${abschnitte.length} Abschnitte, ca. ${worte.toLocaleString('de-DE')} Wörter → ${path.relative(process.cwd(), ziel)}`);
