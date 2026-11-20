@@ -27,12 +27,13 @@ Harte Grenzen (Aktien-Coaching ist keine Anlageberatung)
 - Fragt jemand "Soll ich X kaufen?", formuliere die Antwort als Kriterien und Prüfschritte aus dem Kurs, mit dem Hinweis, dass die Entscheidung bei der Person liegt.
 - Steuer- und Rechtsfragen im Einzelfall: allgemeine Regel aus dem Kurs, dann Verweis auf Steuerberatung.
 - Bei Hebelprodukten, Optionsscheinen, CFDs, Daytrading: Risiko bis zum Totalverlust benennen.
-- Wenn du so etwas erkennst, schreib es knapp in warnung.
+- warnung nur für einen konkreten, ungewöhnlichen Punkt in genau dieser Frage (z. B. Hebelprodukt, Totalverlustrisiko, Einzelfall Steuer/Recht), höchstens 12 Wörter. Den allgemeinen Hinweis "keine Kaufempfehlung / Entscheidung liegt bei der Person" NIE in warnung schreiben, das weiß die Leitung. Im Zweifel warnung leer lassen.
 
 Form
 - ist_frage: false, wenn der Text keine echte inhaltliche Frage an den Trainer ist (Smalltalk, Technikprobleme wie "hört man mich", Danke, rhetorische Fragen). Dann alle anderen Felder kurz halten.
 - frage: die Frage in einem kurzen Satz, ohne Namen.
-- antwort_stichpunkte: höchstens 4 kurze Stichpunkte, das Wichtigste zuerst.
+- kern: die Antwort als Schlagzeile in höchstens 8 Wörtern, ohne Punkt am Ende (z. B. "Nachkaufen nur unter dem letzten Einstieg"). Das ist das Erste, was die Leitung liest.
+- antwort_stichpunkte: höchstens 3 Stichpunkte mit je höchstens 10 Wörtern, das Wichtigste zuerst, keine Wiederholung von kern.
 - antwort_satz: ein bis zwei Sätze, die die Leitung des Calls wörtlich so sagen kann, in Du-Form, ruhig und einfach.
 - rueckfrage: eine Rückfrage an die Person, wenn die Frage unklar ist oder Kontext fehlt, sonst leer.
 - Schreib auf Deutsch, ohne Fachjargon, den der Kurs nicht eingeführt hat.`;
@@ -40,6 +41,7 @@ Form
 export const Hinweis = z.object({
   ist_frage: z.boolean(),
   frage: z.string(),
+  kern: z.string().describe('Antwort als Schlagzeile, höchstens 8 Wörter'),
   thema: z.string().describe('Themenfeld in 1-3 Wörtern, z. B. "Dividenden", "KGV", "Depot eröffnen"'),
   antwort_stichpunkte: z.array(z.string()),
   antwort_satz: z.string(),
@@ -108,6 +110,7 @@ function mockHinweis({ beitrag, treffer }) {
     ist_frage: true,
     frage: beitrag.text.slice(0, 140),
     thema: t?.quelle?.titel ?? 'unbekannt',
+    kern: t ? 'Fundstelle aus der Wissensdatenbank' : 'Keine Fundstelle',
     antwort_stichpunkte: t ? [t.text.slice(0, 160) + (t.text.length > 160 ? ' …' : '')] : ['(keine Fundstelle)'],
     antwort_satz: '[Testmodus: hier stünde der Vorschlag von Claude]',
     rueckfrage: '',

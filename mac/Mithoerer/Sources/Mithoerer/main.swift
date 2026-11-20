@@ -71,14 +71,22 @@ func starte() async {
   let locale = await SpeechTranscriber_deutsch()
   if let pfad = wert("--datei") {
     // Selbsttest: eine Tondatei statt Mikrofon durch die Erkennung schicken.
-    let spur = Transkription(name: leitung, locale: locale, sender: sender)
+    // --datei-name: als wen die Aufnahme gilt (Standard: --name). --ab/--bis in Minuten, --tempo: Abspieltempo (0 = so schnell wie möglich).
+    let spur = Transkription(name: wert("--datei-name") ?? leitung, locale: locale, sender: sender)
     do {
       try await spur.starte()
       let datei = try AVAudioFile(forReading: URL(fileURLWithPath: pfad))
-      while datei.framePosition < datei.length {
-        guard let p = AVAudioPCMBuffer(pcmFormat: datei.processingFormat, frameCapacity: 4800) else { break }
+      let rate = datei.processingFormat.sampleRate
+      let tempo = Double(wert("--tempo") ?? "0") ?? 0
+      let ende = min(datei.length, AVAudioFramePosition((Double(wert("--bis") ?? "100000") ?? 100000) * 60 * rate))
+      datei.framePosition = AVAudioFramePosition((Double(wert("--ab") ?? "0") ?? 0) * 60 * rate)
+      let stueck = AVAudioFrameCount(rate / 10)
+      print("Spiele \(pfad) ab Minute \(Int(Double(datei.framePosition) / rate / 60)) bis \(Int(Double(ende) / rate / 60)), Tempo \(tempo == 0 ? "max" : "\(tempo)x")")
+      while datei.framePosition < ende {
+        guard let p = AVAudioPCMBuffer(pcmFormat: datei.processingFormat, frameCapacity: stueck) else { break }
         try datei.read(into: p)
         spur.fuettere(p)
+        if tempo > 0 { try? await Task.sleep(for: .seconds(Double(p.frameLength) / rate / tempo)) }
       }
       await spur.beende()
       try? await Task.sleep(for: .seconds(1))

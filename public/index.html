@@ -17,24 +17,37 @@ header h1 { font-size:17px; margin:0 8px 0 0; }
 .rechts { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
 button { font:inherit; font-size:14px; padding:6px 12px; border-radius:8px; border:1px solid var(--linie); background:var(--karte); color:var(--text); cursor:pointer; }
 button.notaus { border-color:var(--rot); color:var(--rot); font-weight:600; }
-main { display:grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap:16px; padding:16px; }
+main { display:grid; grid-template-columns: minmax(0,5fr) minmax(0,2fr); gap:16px; padding:16px; }
 @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
 h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--leise); margin:0 0 8px; }
-.karte { background:var(--karte); border:1px solid var(--linie); border-radius:12px; padding:14px 16px; margin-bottom:12px; }
-.karte.neu { border-color:var(--akzent); }
-.karte .kopf { display:flex; gap:8px; align-items:baseline; color:var(--leise); font-size:13px; flex-wrap:wrap; }
-.karte .frage { font-size:20px; font-weight:600; margin:4px 0 8px; }
-.karte ul { margin:6px 0; padding-left:20px; font-size:18px; }
-.karte .satz { font-size:18px; border-left:3px solid var(--akzent); padding-left:10px; margin:10px 0 6px; }
+.karte { background:var(--karte); border:1px solid var(--linie); border-left:6px solid var(--akzent); border-radius:12px; padding:14px 18px; margin-bottom:12px; }
+.karte.neu { box-shadow:0 0 0 3px color-mix(in srgb, var(--akzent) 35%, transparent); }
+.karte.gelb { border-left-color:var(--gelb); }
+.karte.rot { border-left-color:var(--rot); }
+.karte .kopf { display:flex; gap:8px; align-items:center; color:var(--leise); font-size:13px; flex-wrap:wrap; }
+.karte .frage { font-size:15px; color:var(--leise); margin:6px 0 2px; }
+.karte .kern { font-size:28px; line-height:1.2; font-weight:700; margin:2px 0 10px; letter-spacing:-.01em; }
+.karte ul { margin:0 0 10px; padding:0; list-style:none; font-size:18px; }
+.karte li { padding:3px 0 3px 22px; position:relative; }
+.karte li::before { content:""; position:absolute; left:4px; top:.7em; width:8px; height:8px; border-radius:50%; background:var(--akzent); }
+.karte .satz { font-size:17px; background:color-mix(in srgb, var(--akzent) 9%, transparent); border-radius:8px; padding:8px 12px; margin:8px 0; }
+.karte .satz b { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--akzent); display:block; margin-bottom:2px; }
 .karte .meta { font-size:13px; color:var(--leise); }
-.karte .aktionen { display:flex; gap:8px; margin-top:10px; }
+.karte .rueck { font-size:15px; color:var(--leise); margin:4px 0; }
+.karte .aktionen { display:flex; gap:8px; margin-top:10px; align-items:center; }
+.karte details { margin:6px 0 0; font-size:13px; color:var(--leise); }
+.karte details summary { cursor:pointer; }
 .etikett { font-size:12px; padding:1px 8px; border-radius:99px; border:1px solid var(--linie); }
 .etikett.mehr { border-color:var(--akzent); color:var(--akzent); font-weight:600; }
-.warnung { background:var(--rot-bg); color:var(--rot); border-radius:8px; padding:6px 10px; margin-top:8px; font-size:15px; }
-.luecke { background:var(--gelb-bg); color:var(--gelb); border-radius:8px; padding:6px 10px; margin-top:8px; font-size:15px; }
-.erledigt { opacity:.55; }
-.erledigt .frage { font-size:16px; }
-#mitschrift { background:var(--karte); border:1px solid var(--linie); border-radius:12px; padding:10px 12px; max-height:60vh; overflow:auto; font-size:14px; }
+.warnung { display:inline-block; background:var(--rot-bg); color:var(--rot); border-radius:6px; padding:3px 9px; margin:4px 0; font-size:14px; font-weight:600; }
+.luecke { display:inline-block; background:var(--gelb-bg); color:var(--gelb); border-radius:6px; padding:3px 9px; margin:4px 0; font-size:14px; font-weight:600; }
+.karte.kompakt { padding:10px 18px; cursor:pointer; }
+.karte.kompakt .kern { font-size:19px; margin:2px 0 0; }
+.karte.kompakt .frage { margin:4px 0 0; }
+.erledigt { opacity:.5; border-left-color:var(--linie); padding:8px 18px; }
+.erledigt .kern { font-size:16px; margin:0; font-weight:600; }
+#mitschrift { background:var(--karte); border:1px solid var(--linie); border-radius:12px; padding:10px 12px; max-height:70vh; overflow:auto; font-size:13px; color:var(--leise); }
+#mitschrift p:nth-last-child(-n+3) { color:var(--text); }
 #mitschrift p { margin:0 0 6px; }
 #mitschrift .wer { color:var(--leise); }
 #mitschrift .chat .wer { color:var(--akzent); }
@@ -44,7 +57,7 @@ details { margin-top:16px; font-size:14px; }
 details label { display:block; margin:6px 0; }
 body.fokus aside, body.fokus .erledigt, body.fokus details { display:none; }
 body.fokus main { grid-template-columns:1fr; }
-body.fokus .karte .frage { font-size:24px; }
+body.fokus .karte .kern { font-size:34px; }
 body.fokus .karte ul, body.fokus .karte .satz { font-size:21px; }
 #anmelden { max-width:420px; margin:15vh auto; padding:0 16px; }
 #anmelden input { width:100%; font:inherit; padding:8px; border-radius:8px; border:1px solid var(--linie); background:var(--karte); color:var(--text); }
@@ -162,37 +175,49 @@ function zeichneKarten() {
   liste.sort((a, b) => (rang[a.status] - rang[b.status]) || (b.mehrfach - a.mehrfach) || (b.erstellt - a.erstellt));
   const box = $('karten');
   if (!liste.length) { box.replaceChildren(el('p', { class: 'leer' }, 'Noch keine Fragen. Sobald jemand im Call oder im Chat etwas fragt, erscheint hier ein Hinweis.')); return; }
-  box.replaceChildren(...liste.map(karteEl));
+  const erste = liste.find((k) => k.status === 'offen');
+  box.replaceChildren(...liste.map((k) => karteEl(k, k === erste)));
   setTimeout(() => zuletztNeu.clear(), 4000);
 }
 
-function karteEl(k) {
+const offenAuf = new Set(); // ältere offene Karten, die per Klick aufgeklappt wurden
+const ALLGEMEIN = /kaufempfehlung|entscheidung liegt bei|keine anlageberatung/i;
+
+function karteEl(k, istErste) {
   const h = k.hinweis;
-  const wer = (k.namen && k.namen.length > 1 ? k.namen.join(', ') : k.name) + (k.art === 'chat' ? ' im Chat' : ' (gesprochen)');
+  const wer = (k.namen && k.namen.length > 1 ? k.namen.join(', ') : k.name) + (k.art === 'chat' ? ' · Chat' : ' · gesprochen');
   const kopf = el('div', { class: 'kopf' }, el('span', {}, uhrzeit(k.erstellt) + ' · ' + wer),
     k.mehrfach > 1 && el('span', { class: 'etikett mehr' }, k.mehrfach + '× gefragt'),
-    h && el('span', { class: 'etikett' }, h.thema));
-  const klasse = 'karte' + (k.status === 'beantwortet' ? ' erledigt' : '') + (zuletztNeu.has(k.id) ? ' neu' : '');
-  if (k.status === 'pruefe') return el('div', { class: klasse }, kopf, el('div', { class: 'frage' }, k.text), el('div', { class: 'meta' }, 'Claude bereitet einen Hinweis vor …'));
-  if (k.status === 'fehler') return el('div', { class: klasse }, kopf, el('div', { class: 'frage' }, k.text), el('div', { class: 'luecke' }, 'Kein Hinweis: ' + k.fehler), aktionen(k));
-  return el('div', { class: klasse }, kopf,
+    h && h.thema && el('span', { class: 'etikett' }, h.thema));
+  const neu = zuletztNeu.has(k.id) ? ' neu' : '';
+  if (k.status === 'pruefe') return el('div', { class: 'karte' + neu }, kopf, el('div', { class: 'kern' }, k.text), el('div', { class: 'meta' }, 'Claude bereitet einen Hinweis vor …'));
+  if (k.status === 'fehler') return el('div', { class: 'karte gelb' + neu }, kopf, el('div', { class: 'kern' }, k.text), el('div', { class: 'luecke' }, 'Kein Hinweis: ' + k.fehler), aktionen(k));
+  const kern = h.kern || h.antwort_stichpunkte[0] || h.frage;
+  const warnung = h.warnung && !ALLGEMEIN.test(h.warnung) ? h.warnung : '';
+  const farbe = warnung ? ' rot' : h.abgedeckt === 'nicht_enthalten' ? ' gelb' : '';
+  if (k.status === 'beantwortet') return el('div', { class: 'karte erledigt' }, el('div', { class: 'kern' }, '✓ ' + kern), aktionen(k));
+  const offen = istErste || offenAuf.has(k.id);
+  if (!offen) return el('div', { class: 'karte kompakt' + farbe + neu, onclick: () => { offenAuf.add(k.id); zeichneKarten(); } },
+    kopf, el('div', { class: 'kern' }, kern), el('div', { class: 'frage' }, h.frage || k.text));
+  const punkte = (h.kern ? h.antwort_stichpunkte : h.antwort_stichpunkte.slice(1)).slice(0, 3);
+  return el('div', { class: 'karte' + farbe + neu }, kopf,
     el('div', { class: 'frage' }, h.frage || k.text),
-    k.status !== 'beantwortet' && [
-      el('ul', {}, h.antwort_stichpunkte.map((s) => el('li', {}, s))),
-      h.antwort_satz && el('div', { class: 'satz' }, '„' + h.antwort_satz + '“'),
-      h.rueckfrage && el('div', { class: 'meta' }, 'Rückfrage: ' + h.rueckfrage),
-      h.abgedeckt === 'nicht_enthalten' && el('div', { class: 'luecke' }, 'Nicht in Kurs oder Calls enthalten. Lieber mitnehmen oder nachfragen.'),
-      h.warnung && el('div', { class: 'warnung' }, '⚠ ' + h.warnung),
-      h.quellen.length > 0 && el('div', { class: 'meta' }, 'Quelle: ' + h.quellen.map((q) => q.titel + (q.stelle ? ' (' + q.stelle + ')' : '')).join(' · ')),
-    ],
+    el('div', { class: 'kern' }, kern),
+    warnung && el('div', { class: 'warnung' }, '⚠ ' + warnung),
+    h.abgedeckt === 'nicht_enthalten' && el('div', { class: 'luecke' }, 'Nicht im Kurs, lieber nachfragen'),
+    punkte.length > 0 && el('ul', {}, punkte.map((p) => el('li', {}, p))),
+    h.antwort_satz && el('div', { class: 'satz' }, el('b', {}, 'So sagen'), h.antwort_satz),
+    h.rueckfrage && el('div', { class: 'rueck' }, '↩ ' + h.rueckfrage),
+    h.quellen.length > 0 && el('details', {}, el('summary', {}, 'Quellen (' + h.quellen.length + ')'),
+      h.quellen.map((q) => el('div', {}, q.titel + (q.stelle ? ' (' + q.stelle + ')' : '')))),
     aktionen(k));
 }
 
 function aktionen(k) {
   const setze = (s) => () => api('/api/karte/' + k.id, { status: s });
   return el('div', { class: 'aktionen' },
-    k.status === 'beantwortet' ? el('button', { onclick: setze('offen') }, 'Wieder öffnen') : el('button', { onclick: setze('beantwortet') }, '✓ Beantwortet'),
-    k.status !== 'beantwortet' && el('button', { onclick: setze('verworfen') }, 'Ausblenden'));
+    k.status === 'beantwortet' ? el('button', { onclick: (ev) => { ev.stopPropagation(); setze('offen')(); } }, 'Wieder öffnen') : el('button', { onclick: (ev) => { ev.stopPropagation(); setze('beantwortet')(); } }, '✓ Beantwortet'),
+    k.status !== 'beantwortet' && el('button', { onclick: (ev) => { ev.stopPropagation(); setze('verworfen')(); } }, 'Ausblenden'));
 }
 
 function zeichneMitschrift() {
