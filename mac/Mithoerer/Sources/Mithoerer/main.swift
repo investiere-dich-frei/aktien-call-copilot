@@ -2,6 +2,7 @@
 // Hört während eines Zoom-Calls mit: Mikrofon der Leitung, Ton aus Zoom (Teilnehmerinnen) und den Zoom-Chat.
 // Sprache wird auf dem Mac erkannt (Apple, offline), an den Server gehen nur fertige Textbeiträge.
 //
+//   Copilot-Mithörer.app (ohne Argumente)       Menüleisten-App: hört automatisch bei jedem Zoom-Meeting mit
 //   mithoerer --name "Emilia Bolda"            normaler Betrieb (Server: copilot.investieredichfrei.de)
 //   mithoerer --trocken                        nur anzeigen, nichts senden
 //   mithoerer --ohne-mikro / --ohne-zoom / --ohne-chat
@@ -29,11 +30,6 @@ if hat("--hilfe") || hat("-h") {
   exit(0)
 }
 
-func bedienungshilfenErlaubt(fragen: Bool) -> Bool {
-  let opt = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: fragen] as CFDictionary
-  return AXIsProcessTrustedWithOptions(opt)
-}
-
 if hat("--chat-baum") {
   guard bedienungshilfenErlaubt(fragen: true) else {
     print("Bitte in Systemeinstellungen › Datenschutz & Sicherheit › Bedienungshilfen das Terminal erlauben und neu starten.")
@@ -45,9 +41,31 @@ if hat("--chat-baum") {
   exit(0)
 }
 
+let leitungStandard = UserDefaults.standard.string(forKey: "name") ?? NSFullUserName()
+let serverStandard = UserDefaults.standard.string(forKey: "server") ?? "https://copilot.investieredichfrei.de"
+
+// App-Modus: aus dem App-Paket ohne Argumente gestartet (Doppelklick, Anmeldeobjekt) oder mit --app.
+if hat("--app") || (Bundle.main.bundleIdentifier != nil && argumente.count == 1) {
+  if !hat("--konsole") {
+    let pfad = MenueApp.protokollDatei.path
+    try? FileManager.default.createDirectory(at: MenueApp.protokollDatei.deletingLastPathComponent(), withIntermediateDirectories: true)
+    freopen(pfad, "a", stdout)
+    freopen(pfad, "a", stderr)
+    setvbuf(stdout, nil, _IOLBF, 0)
+  }
+  print("=== Copilot-Mithörer gestartet \(Date())")
+  signal(SIGPIPE, SIG_IGN)
+  let app = NSApplication.shared
+  app.setActivationPolicy(.accessory)
+  let delegat = MainActor.assumeIsolated { MenueApp(server: URL(string: wert("--server") ?? serverStandard)!, leitung: wert("--name") ?? leitungStandard) }
+  app.delegate = delegat
+  app.run()
+  exit(0)
+}
+
 let trocken = hat("--trocken")
-let leitung = wert("--name") ?? NSFullUserName()
-let serverURL = URL(string: wert("--server") ?? "https://copilot.investieredichfrei.de")
+let leitung = wert("--name") ?? leitungStandard
+let serverURL = URL(string: wert("--server") ?? serverStandard)
 
 var token = ""
 if !trocken {
@@ -62,12 +80,9 @@ if !trocken {
 }
 let sender = Sender(server: trocken ? nil : serverURL, token: token)
 
-let mikrofon = Mikrofon()
-let zoomTon = ZoomTon()
-var chat: ChatLeser?
-var spuren: [Transkription] = []
+let sitzung = MainActor.assumeIsolated { Sitzung(leitung: leitung, sender: sender) }
 
-func starte() async {
+@MainActor func starte() async {
   let locale = await SpeechTranscriber_deutsch()
   if let pfad = wert("--datei") {
     // Selbsttest: eine Tondatei statt Mikrofon durch die Erkennung schicken.
@@ -93,31 +108,8 @@ func starte() async {
     } catch { print("Datei: \(error.localizedDescription)") }
     exit(0)
   }
-  print("Mithörer startet · Leitung: \(leitung) · \(trocken ? "Trockenlauf, nichts wird gesendet" : "Server: \(serverURL!.host() ?? "")")")
-
-  if !hat("--ohne-mikro") {
-    let erlaubt = await AVCaptureDevice.requestAccess(for: .audio)
-    if !erlaubt { print("Kein Zugriff aufs Mikrofon. Bitte in den Systemeinstellungen erlauben.") } else {
-      let spur = Transkription(name: leitung, locale: locale, sender: sender)
-      do { try await spur.starte(); try mikrofon.starte(an: spur); spuren.append(spur); print("✓ Mikrofon läuft") }
-      catch { print("Mikrofon: \(error.localizedDescription)") }
-    }
-  }
-
-  if !hat("--ohne-zoom") {
-    let spur = Transkription(name: "Teilnehmer:in", locale: locale, sender: sender)
-    do { try await spur.starte(); try await zoomTon.starte(an: spur); spuren.append(spur); print("✓ Zoom-Ton läuft") }
-    catch { print("Zoom-Ton: \(error.localizedDescription)") }
-  }
-
-  if !hat("--ohne-chat") {
-    if bedienungshilfenErlaubt(fragen: true) {
-      await MainActor.run { chat = ChatLeser(sender: sender, leitung: leitung); chat?.starte() }
-      print("✓ Chat-Auslesen läuft (Chat im Meeting offen lassen)")
-    } else {
-      print("Chat: Bitte in Systemeinstellungen › Datenschutz & Sicherheit › Bedienungshilfen das Terminal erlauben, dann neu starten.")
-    }
-  }
+  print(trocken ? "Trockenlauf, nichts wird gesendet" : "Server: \(serverURL!.host() ?? "")")
+  await sitzung.starte(mikro: !hat("--ohne-mikro"), zoom: !hat("--ohne-zoom"), chatLesen: !hat("--ohne-chat"))
   print("Läuft. Beenden mit Ctrl+C.")
 }
 
@@ -132,9 +124,7 @@ let abbruch = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
 abbruch.setEventHandler {
   print("\nBeende …")
   Task {
-    mikrofon.stoppe()
-    await zoomTon.stoppe()
-    for s in spuren { await s.beende() }
+    await sitzung.stoppe()
     try? await Task.sleep(for: .seconds(2))
     exit(0)
   }

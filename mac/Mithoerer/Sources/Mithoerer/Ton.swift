@@ -14,7 +14,7 @@ final class Mikrofon {
     try engine.start()
   }
 
-  func stoppe() { engine.stop() }
+  func stoppe() { engine.inputNode.removeTap(onBus: 0); engine.stop() }
 }
 
 /// Ton, den Zoom abspielt (die Teilnehmerinnen), über ScreenCaptureKit, nur von der Zoom-App.
@@ -47,7 +47,7 @@ final class ZoomTon: NSObject, SCStreamOutput, SCStreamDelegate {
     strom = s
   }
 
-  func stoppe() async { try? await strom?.stopCapture() }
+  func stoppe() async { try? await strom?.stopCapture(); strom = nil }
 
   func stream(_ stream: SCStream, didOutputSampleBuffer sb: CMSampleBuffer, of type: SCStreamOutputType) {
     guard type == .audio, sb.isValid, let puffer = Self.pcm(aus: sb) else { return }

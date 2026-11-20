@@ -102,7 +102,7 @@ body.fokus .karte ul, body.fokus .karte .satz { font-size:21px; }
 <script>
 const $ = (id) => document.getElementById(id);
 let token = '';
-try { token = sessionStorage.getItem('coachToken') || ''; } catch {}
+try { token = localStorage.getItem('coachToken') || sessionStorage.getItem('coachToken') || ''; } catch {}
 const hashToken = new URLSearchParams(location.hash.slice(1)).get('token');
 if (hashToken) { token = hashToken; history.replaceState(null, '', location.pathname); }
 
@@ -110,7 +110,7 @@ const karten = new Map();
 const mitschrift = [];
 const zuletztNeu = new Set();
 
-function speichereToken(t) { token = t; try { sessionStorage.setItem('coachToken', t); } catch {} }
+function speichereToken(t) { token = t; try { localStorage.setItem('coachToken', t); } catch {} }
 function api(pfad, body) {
   return fetch(pfad, { method: body ? 'POST' : 'GET', headers: { authorization: 'Bearer ' + token, 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
 }
@@ -125,7 +125,7 @@ function uhrzeit(ms) { return new Date(ms).toLocaleTimeString('de-DE', { hour: '
 async function start() {
   if (!token) { $('anmelden').hidden = false; return; }
   const r = await api('/api/status');
-  if (r.status === 401) { try { sessionStorage.removeItem('coachToken'); } catch {} token = ''; $('anmelden').hidden = false; return; }
+  if (r.status === 401) { try { localStorage.removeItem('coachToken'); sessionStorage.removeItem('coachToken'); } catch {} token = ''; $('anmelden').hidden = false; return; }
   speichereToken(token);
   $('anmelden').hidden = true; $('app').hidden = false;
   verbinde();

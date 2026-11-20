@@ -24,6 +24,8 @@ final class ChatLeser {
     abfragen()
   }
 
+  func stoppe() { timer?.invalidate(); timer = nil }
+
   private func abfragen() {
     guard let app = Self.zoomApp() else { return }
     let zeilen = ChatBaum.nachrichten(in: app)

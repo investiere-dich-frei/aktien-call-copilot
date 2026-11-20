@@ -9,7 +9,22 @@ Läuft auf dem Mac, auf dem der Call geführt wird, und schickt fertige Textbeit
 - Spracherkennung: Apple `SpeechTranscriber`, offline auf dem Mac (macOS 26+). Ton verlässt den Mac nicht, an den Server gehen nur Texte.
 - Kopfhörer benutzen, sonst landet Teilnehmerinnen-Ton auch im Mikrofon.
 
-## Bauen und starten
+## Als Mac-App (empfohlen)
+
+```bash
+mac/baue-app.sh        # baut ~/Applications/Copilot-Mithörer.app, signiert mit dem Apple-Development-Zertifikat
+open ~/Applications/Copilot-Mithörer.app
+```
+
+Die App sitzt in der Menüleiste (Wellen-Symbol), startet beim Anmelden von selbst und hört automatisch mit,
+sobald in der Zoom-App ein Meeting offen ist (Fenster „Zoom Meeting“ oder Bildschirmfreigabe). 60 Sekunden nach
+Meetingende hört sie auf. Dabei öffnet sie die Copilot-Seite als eigenes Chrome-Fenster (abschaltbar im Menü).
+Leitung = voller Name des Mac-Benutzers, abweichend: `defaults write de.investieredichfrei.mithoerer name "Emilia Bolda"`.
+Protokoll: `~/Library/Logs/Copilot-Mithoerer.log`. Beim ersten Start fragt macOS nach Mikrofon,
+Bildschirm-/Systemaudio und Bedienungshilfen, die Freigaben gelten für die App (nicht fürs Terminal).
+Ein Neubau mit demselben Zertifikat behält die Freigaben.
+
+## Bauen und im Terminal starten
 
 ```bash
 cd mac/Mithoerer && swift build -c release
