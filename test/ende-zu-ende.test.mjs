@@ -167,3 +167,16 @@ test('Mac-Mithörer: Beiträge über /api/beitrag bis zur Fragekarte', async () 
     stop();
   }
 });
+
+test('/health meldet, wie lange der letzte Beitrag her ist (Update-Sperre)', async () => {
+  const coach = { modell: 'fake', antworte: async () => ({ ist_frage: false, frage: '', kern: '', thema: '', antwort_stichpunkte: [], antwort_satz: '', rueckfrage: '', abgedeckt: 'wissensbasis', quellen: [], warnung: '' }) };
+  const { server, stop } = erstelleServer({ COACH_TOKEN: 'testtoken', coach, wissen: new Wissen([]) });
+  await new Promise((ok) => server.listen(0, ok));
+  const port = server.address().port;
+  const health = () => new Promise((ok) => http.get({ port, path: '/health' }, (r) => { let d = ''; r.on('data', (c) => (d += c)); r.on('end', () => ok(JSON.parse(d))); }));
+  try {
+    assert.equal((await health()).aktivVorSek, null);
+    await post(port, '/api/beitrag', JSON.stringify({ art: 'chat', name: 'Max', text: 'Hallo' }), { authorization: 'Bearer testtoken' });
+    assert.ok((await health()).aktivVorSek <= 1);
+  } finally { stop(); }
+});

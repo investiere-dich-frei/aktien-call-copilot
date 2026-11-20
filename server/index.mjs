@@ -100,7 +100,11 @@ export function erstelleServer(cfg = {}) {
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', ...SICHERHEIT });
         return fs.createReadStream(path.join(WURZEL, 'public/index.html')).pipe(res);
       }
-      if (url.pathname === '/health') return json(res, 200, { ok: true });
+      if (url.pathname === '/health') {
+        // aktivVorSek: Sekunden seit dem letzten Beitrag (Call, Mithörer, Test). Das Update-Skript wartet, solange ein Call läuft.
+        const l = copilot.letzterBeitrag;
+        return json(res, 200, { ok: true, aktivVorSek: l ? Math.round((Date.now() - l) / 1000) : null });
+      }
       json(res, 404, {});
     } catch (e) {
       json(res, 500, { fehler: e.message });

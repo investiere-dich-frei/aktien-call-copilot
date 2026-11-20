@@ -27,6 +27,7 @@ export class Copilot extends EventEmitter {
   }
 
   beitrag(b) {
+    this.letzterBeitrag = Date.now(); // für die Update-Sperre während eines Calls (/health)
     const trainer = this.istTrainer(b.name);
     const rolle = trainer ? 'Trainer' : b.art === 'chat' ? 'Teilnehmer:in (Chat)' : 'Teilnehmer:in';
     this.verlauf.push(`${rolle}: ${b.text}`);

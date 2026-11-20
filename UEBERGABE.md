@@ -127,6 +127,7 @@ RTMS ist verworfen: Zoom schaltet es nur mit dem Universal Credit Plan frei, min
 - Server-Eingang `POST /api/beitrag` mit COACH_TOKEN; Status `mithoerer: verbunden` in `/api/status`.
 - Auf Christians Mac: `~/Claude/Projects/Aktien-Call-Copilot/mithoerer` und `mithoerer-start.command` (Doppelklick startet im Terminal). Zugangsschlüssel im Schlüsselbund (Dienst `aktien-copilot`, Konto `coach`). Terminal hat Mikrofon, Bildschirm-/Systemaudio und Bedienungshilfen.
 - Getestet 20.11.: Tondatei → Erkennung → Server → Antwortkarte in 8 s; Live-Meeting: Mikrofon, Zoom-Ton und Chat starten, Chatnachricht kommt als Leitung an. Noch nicht getestet: echte zweite Teilnehmerin (Zoom-Ton und Chat-Name).
+- **Update-Sperre im Call:** Das Auto-Update (alle 2 Min.) spielt nichts ein, solange in den letzten 10 Minuten Beiträge ankamen (`/health` → `aktivVorSek`), weil ein Neustart Karten und Mitschrift löscht. Notfall: `COPILOT_UPDATE_SOFORT=1 copilot-update`.
 - Die Zoom-RTMS-App und der Webhook bleiben im Code, sind aber ohne Freischaltung wirkungslos. Developer Pack in Emilias Konto ggf. kündigen.
 
 ## 5. Offene Aufgaben
