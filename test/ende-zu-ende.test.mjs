@@ -180,3 +180,27 @@ test('/health meldet, wie lange der letzte Beitrag her ist (Update-Sperre)', asy
     assert.ok((await health()).aktivVorSek <= 1);
   } finally { stop(); }
 });
+
+test('Eigene Frage der Leitung über /api/frage wird beantwortet', async () => {
+  const anfragen = [];
+  const coach = { modell: 'fake', antworte: async ({ beitrag }) => {
+    anfragen.push(beitrag);
+    return { ist_frage: true, frage: beitrag.text, kern: 'k', thema: 'T', antwort_stichpunkte: ['a'], antwort_satz: 's', rueckfrage: '', abgedeckt: 'wissensbasis', quellen: [], warnung: '' };
+  } };
+  const { server, stop } = erstelleServer({ COACH_TOKEN: 'testtoken', TRAINER_NAMEN: 'Christian', coach, wissen: new Wissen([]) });
+  await new Promise((ok) => server.listen(0, ok));
+  const port = server.address().port;
+  const auth = { authorization: 'Bearer testtoken' };
+  try {
+    assert.equal((await post(port, '/api/frage', JSON.stringify({ text: 'Was ist das KGV?' }))).status, 401);
+    assert.equal((await post(port, '/api/frage', JSON.stringify({ text: '  ' }), auth)).status, 400);
+    const fertig = sseSammeln(port, 'testtoken', (e) => e.some((x) => x.typ === 'karte' && x.karte.status === 'offen'));
+    await new Promise((ok) => setTimeout(ok, 100));
+    assert.equal((await post(port, '/api/frage', JSON.stringify({ text: 'kgv erklären' }), auth)).status, 200);
+    const ereignisse = await fertig;
+    assert.ok(ereignisse.some((e) => e.typ === 'karte' && e.karte.art === 'eigen'));
+    assert.deepEqual(anfragen.map((b) => b.text), ['kgv erklären']);
+  } finally {
+    stop();
+  }
+});

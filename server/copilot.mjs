@@ -58,14 +58,26 @@ export class Copilot extends EventEmitter {
         return this.emit('ereignis', { typ: 'karte', karte: k });
       }
     }
+    this.#neueKarte(b);
+  }
+
+  /** Frage, die die Leitung selbst auf der Copilot-Seite eintippt (nicht im Call sichtbar). */
+  eigeneFrage(text) {
+    const t = String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, 1000);
+    if (!t) return null;
+    return this.#neueKarte({ art: 'eigen', name: 'Eigene Frage', text: t });
+  }
+
+  #neueKarte(b) {
     const karte = {
       id: crypto.randomUUID(), status: 'pruefe', art: b.art, name: b.name, namen: [b.name],
-      text: b.text, erstellt: jetzt, mehrfach: 1,
+      text: b.text, erstellt: Date.now(), mehrfach: 1,
     };
     this.karten.set(karte.id, karte);
     this.emit('ereignis', { typ: 'karte', karte });
     this.warteschlange.push({ karte, verlauf: [...this.verlauf] });
     this.#weiter();
+    return karte;
   }
 
   #weiter() {
@@ -87,7 +99,7 @@ export class Copilot extends EventEmitter {
       ];
       const hinweis = await this.coach.antworte({ beitrag: karte, verlauf, treffer });
       if (!this.karten.has(karte.id)) return; // inzwischen gelöscht (Notaus)
-      if (!hinweis.ist_frage) { karte.status = 'verworfen'; }
+      if (!hinweis.ist_frage && karte.art !== 'eigen') { karte.status = 'verworfen'; }
       else { karte.status = karte.status === 'beantwortet' ? 'beantwortet' : 'offen'; karte.hinweis = hinweis; }
       karte.dauerMs = Date.now() - start;
     } catch (e) {

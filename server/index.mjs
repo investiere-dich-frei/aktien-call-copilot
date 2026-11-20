@@ -5,6 +5,7 @@
 //   POST /api/karte/:id       { status: 'offen'|'beantwortet'|'verworfen' }
 //   POST /api/simulation      { vtt, chat, tempo }  Aufzeichnung abspielen
 //   POST /api/notaus          alles stoppen und vergessen
+//   POST /api/frage           { text }  eigene Frage der Leitung, nur auf der Copilot-Seite sichtbar
 //   POST /api/beitrag         Mac-Mithörer: { art: 'sprache'|'chat', name, text } (fertig transkribierter Beitrag)
 // Zugriff auf /api/* nur mit COACH_TOKEN (Header "Authorization: Bearer …" oder ?token=… beim Stream).
 import http from 'node:http';
@@ -76,6 +77,11 @@ export function erstelleServer(cfg = {}) {
           simulation = spieleAb(ereignisse, (b) => copilot.beitrag(b), { tempo: Math.min(20, Math.max(0.5, Number(tempo) || 1)) });
           setTimeout(() => { simulation = null; }, simulation.dauerSek * 1000 + 3000).unref();
           return json(res, 200, { anzahl: simulation.anzahl, dauerSek: simulation.dauerSek });
+        }
+        if (req.method === 'POST' && url.pathname === '/api/frage') {
+          const { text = '' } = JSON.parse(await lies(req) || '{}');
+          const karte = copilot.eigeneFrage(text);
+          return karte ? json(res, 200, { id: karte.id }) : json(res, 400, { fehler: 'text nötig' });
         }
         if (req.method === 'POST' && url.pathname === '/api/beitrag') {
           const { art = 'sprache', name = '', text = '' } = JSON.parse(await lies(req) || '{}');

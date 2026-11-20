@@ -59,6 +59,8 @@ body.fokus aside, body.fokus .erledigt, body.fokus details { display:none; }
 body.fokus main { grid-template-columns:1fr; }
 body.fokus .karte .kern { font-size:34px; }
 body.fokus .karte ul, body.fokus .karte .satz { font-size:21px; }
+.frageForm { display:flex; gap:8px; margin:0 0 12px; }
+.frageForm input { flex:1; min-width:0; font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--linie); background:var(--karte); color:var(--text); }
 #anmelden { max-width:420px; margin:15vh auto; padding:0 16px; }
 #anmelden input { width:100%; font:inherit; padding:8px; border-radius:8px; border:1px solid var(--linie); background:var(--karte); color:var(--text); }
 </style>
@@ -82,6 +84,7 @@ body.fokus .karte ul, body.fokus .karte .satz { font-size:21px; }
 <main>
   <section>
     <h2>Fragen</h2>
+    <form id="frageForm" class="frageForm"><input id="frageFeld" placeholder="Eigene Frage an den Copilot (nur hier sichtbar, nicht im Call)" autocomplete="off"><button>Fragen</button></form>
     <div id="karten"><p class="leer">Noch keine Fragen. Sobald jemand im Call oder im Chat etwas fragt, erscheint hier ein Hinweis.</p></div>
   </section>
   <aside>
@@ -185,7 +188,7 @@ const ALLGEMEIN = /kaufempfehlung|entscheidung liegt bei|keine anlageberatung/i;
 
 function karteEl(k, istErste) {
   const h = k.hinweis;
-  const wer = (k.namen && k.namen.length > 1 ? k.namen.join(', ') : k.name) + (k.art === 'chat' ? ' · Chat' : ' · gesprochen');
+  const wer = (k.namen && k.namen.length > 1 ? k.namen.join(', ') : k.name) + (k.art === 'eigen' ? '' : k.art === 'chat' ? ' · Chat' : ' · gesprochen');
   const kopf = el('div', { class: 'kopf' }, el('span', {}, uhrzeit(k.erstellt) + ' · ' + wer),
     k.mehrfach > 1 && el('span', { class: 'etikett mehr' }, k.mehrfach + '× gefragt'),
     h && h.thema && el('span', { class: 'etikett' }, h.thema));
@@ -237,6 +240,13 @@ function zeigeRegel(e) {
   setTimeout(() => k.remove(), 60_000);
 }
 
+$('frageForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const t = $('frageFeld').value.trim();
+  if (!t) return;
+  const r = await api('/api/frage', { text: t });
+  if (r.ok) $('frageFeld').value = '';
+});
 $('anmeldeForm').addEventListener('submit', (ev) => { ev.preventDefault(); speichereToken($('tokenFeld').value.trim()); start(); });
 $('fokusBtn').addEventListener('click', () => document.body.classList.toggle('fokus'));
 $('notausBtn').addEventListener('click', async () => {
