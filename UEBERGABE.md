@@ -69,7 +69,7 @@ ssh christianbolda@mac-mini-von-macmini.local
 ssh -i ~/.ssh/idf_server root@91.98.174.199
 ```
 
-Die Hetzner-Firewall `idf-wissen-bot` (ID 11937052) lässt Port 22 nur von Christians fester IP (`89.182.201.84`) zu. Wechselt die IP, nur die Regel für Port 22 per Hetzner-API anpassen; 80 und 443 bleiben offen.
+Die Hetzner-Firewall `idf-wissen-bot` (ID 11937052) lässt Port 22 nur von Christians fester IP (`89.182.201.44`, geändert am 20.11.2026, vorher .84) zu. Wechselt die IP, nur die Regel für Port 22 per Hetzner-API anpassen; 80 und 443 bleiben offen.
 
 **HTTPS läuft über den Caddy des Wissens-Bots, nicht über einen eigenen.** Auf bot-nbg1 belegt der Docker-Container `bot-nbg1-caddy-1` die Ports 80/443. Er bedient auch `wissen.investieredichfrei.de` (Teams-Nachrichten, Content-Agent, Zentrale). `install.sh` erkennt das und ändert dort nichts; die Einbindung wurde von Hand gemacht:
 
@@ -117,6 +117,17 @@ Stand 16.11.2026: die drei Zoom-Schlüssel sind eingetragen, `ANTHROPIC_API_KEY`
 - Das Zoom-Programm auf dem MacBook muss angemeldet sein; Meetings über „Neues Meeting“ starten, nicht im Raum eines anderen Kontos.
 - Wissensdatenbank seit 16.11.2026 auf dem Server: Kurs aus „IDF Emma“ plus 151 Live-Calls (Emilia Advanced/Coaching, Sarah Basic), 11.150 Abschnitte. Wie sie gebaut und aktualisiert wird: `wissen/AKTUALISIEREN.md`. Testlauf mit Claude liefert Antworten mit Lektionen als Quelle.
 - Zugriff: Ist das MacBook nicht im Heimnetz, den Mac mini über Tailscale (`100.124.116.34`) statt `mac-mini-von-macmini.local` nehmen. Log-Mitschnitt für Tests: `/root/copilot-watch.sh <Sekunden>` auf dem Server.
+
+## 4b. Mac-Mithörer statt RTMS (seit 20.11.2026)
+
+RTMS ist verworfen: Zoom schaltet es nur mit dem Universal Credit Plan frei, mindestens 1.500 USD/Monat (Mail Daniel Ventura, 20.11.2026). Stattdessen läuft auf dem Mac, auf dem der Call geführt wird, der **Mac-Mithörer** (`mac/`, Anleitung `mac/README.md`):
+
+- Mikrofon = Leitung, Zoom-Ton (ScreenCaptureKit, nur Zoom-App) = Teilnehmerinnen, Spracherkennung offline mit Apple `SpeechTranscriber` (de-DE). Ton verlässt den Mac nicht.
+- Zoom-Chat über die Bedienungshilfen: Tabelle "Chat-Liste", Zellen `ZMTextMessageCellView` (Name, Uhrzeit, Text; Folgenachrichten ohne Name). Eigene Nachrichten heißen "Sie" und werden der Leitung zugeordnet. Getestet mit Zoom 7.2.5.
+- Server-Eingang `POST /api/beitrag` mit COACH_TOKEN; Status `mithoerer: verbunden` in `/api/status`.
+- Auf Christians Mac: `~/Claude/Projects/Aktien-Call-Copilot/mithoerer` und `mithoerer-start.command` (Doppelklick startet im Terminal). Zugangsschlüssel im Schlüsselbund (Dienst `aktien-copilot`, Konto `coach`). Terminal hat Mikrofon, Bildschirm-/Systemaudio und Bedienungshilfen.
+- Getestet 20.11.: Tondatei → Erkennung → Server → Antwortkarte in 8 s; Live-Meeting: Mikrofon, Zoom-Ton und Chat starten, Chatnachricht kommt als Leitung an. Noch nicht getestet: echte zweite Teilnehmerin (Zoom-Ton und Chat-Name).
+- Die Zoom-RTMS-App und der Webhook bleiben im Code, sind aber ohne Freischaltung wirkungslos. Developer Pack in Emilias Konto ggf. kündigen.
 
 ## 5. Offene Aufgaben
 

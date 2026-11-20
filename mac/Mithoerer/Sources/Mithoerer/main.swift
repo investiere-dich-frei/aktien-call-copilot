@@ -14,6 +14,7 @@ import ApplicationServices
 import AVFoundation
 import Foundation
 
+setvbuf(stdout, nil, _IOLBF, 0) // Zeilenweise ausgeben, auch in eine Datei oder Pipe
 let argumente = CommandLine.arguments
 func hat(_ f: String) -> Bool { argumente.contains(f) }
 func wert(_ f: String) -> String? {
@@ -38,7 +39,9 @@ if hat("--chat-baum") {
     print("Bitte in Systemeinstellungen › Datenschutz & Sicherheit › Bedienungshilfen das Terminal erlauben und neu starten.")
     exit(1)
   }
-  ChatBaum.baumAusgeben()
+  if hat("--chat-nachrichten") {
+    if let app = ChatLeser.zoomApp(), let n = ChatBaum.nachrichten(in: app) { for m in n { print("\(m.name): \(m.text)") } } else { print("Kein Chat gefunden.") }
+  } else { ChatBaum.baumAusgeben() }
   exit(0)
 }
 
@@ -101,7 +104,7 @@ func starte() async {
 
   if !hat("--ohne-chat") {
     if bedienungshilfenErlaubt(fragen: true) {
-      await MainActor.run { chat = ChatLeser(sender: sender); chat?.starte() }
+      await MainActor.run { chat = ChatLeser(sender: sender, leitung: leitung); chat?.starte() }
       print("✓ Chat-Auslesen läuft (Chat im Meeting offen lassen)")
     } else {
       print("Chat: Bitte in Systemeinstellungen › Datenschutz & Sicherheit › Bedienungshilfen das Terminal erlauben, dann neu starten.")

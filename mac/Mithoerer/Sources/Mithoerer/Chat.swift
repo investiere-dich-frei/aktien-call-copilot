@@ -11,7 +11,8 @@ final class ChatLeser {
   private var timer: Timer?
   private var gewarnt = false
 
-  init(sender: Sender) { self.sender = sender }
+  private let leitung: String
+  init(sender: Sender, leitung: String) { self.sender = sender; self.leitung = leitung }
 
   static func zoomApp() -> AXUIElement? {
     guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: ZoomTon.zoomKennung).first else { return nil }
@@ -38,7 +39,8 @@ final class ChatLeser {
       jetzt[schluessel, default: 0] += 1
       if jetzt[schluessel]! > gesehen[schluessel, default: 0] {
         // Beim Start alles Vorhandene nur merken, nicht senden.
-        if !erster { sender.schicke(art: "chat", name: z.name, text: z.text) }
+        let name = ["Sie", "Ich", "Me", "You"].contains(z.name) ? leitung : z.name
+        if !erster { sender.schicke(art: "chat", name: name, text: z.text) }
       }
     }
     for (k, n) in jetzt where n > gesehen[k, default: 0] { gesehen[k] = n }
@@ -68,6 +70,7 @@ enum ChatBaum {
     if tiefe > 25 { return nil }
     let rolle = wert(e, kAXRoleAttribute)
     let chat = istChat || istChatFenster(e)
+    if rolle == "AXTable", wert(e, kAXDescriptionAttribute).hasPrefix("Chat-Liste") || wert(e, kAXDescriptionAttribute).hasPrefix("Chat list") { return e }
     if chat, ["AXTable", "AXList", "AXOutline"].contains(rolle) { return e }
     for k in kinder(e, kAXChildrenAttribute) {
       if let f = finde(k, tiefe: tiefe + 1, istChat: chat) { return f }
@@ -75,12 +78,25 @@ enum ChatBaum {
     return nil
   }
 
-  /// Jede Zeile der Liste → Texte einsammeln. Zoom zeigt meist erst einen Kopf (Name, Uhrzeit), dann die Nachricht.
+  /// Zoom (getestet 20.11.2026, Version 7.2.5): Tabelle "Chat-Liste", je Nachricht eine Zelle "ZMTextMessageCellView".
+  /// Deren Kinder: Profil-Knopf, Name (AXUnknown, fehlt bei Folgenachrichten derselben Person), Uhrzeit (AXStaticText),
+  /// Nachricht (AXUnknown). Systemzeilen ("Meeting gestartet", Datum) sind "ZMPromptMessageCellView" und werden übersprungen.
   private static func zeilen(von liste: AXUIElement) -> [ChatNachricht] {
     var out: [ChatNachricht] = []
     var name = "Teilnehmer:in"
     let reihen = kinder(liste, kAXRowsAttribute).isEmpty ? kinder(liste, kAXChildrenAttribute) : kinder(liste, kAXRowsAttribute)
     for reihe in reihen {
+      if let zelle = findeId(reihe, "ZMTextMessageCellView", tiefe: 0) {
+        let werte = kinder(zelle, kAXChildrenAttribute)
+          .filter { wert($0, kAXRoleAttribute) == "AXUnknown" }
+          .map { wert($0, kAXValueAttribute).trimmingCharacters(in: .whitespacesAndNewlines) }
+          .filter { !$0.isEmpty }
+        if werte.count >= 2 { name = werte[0]; out.append(ChatNachricht(name: name, text: werte.dropFirst().joined(separator: " "))) }
+        else if werte.count == 1 { out.append(ChatNachricht(name: name, text: werte[0])) }
+        continue
+      }
+      if findeId(reihe, "ZMPromptMessageCellView", tiefe: 0) != nil { continue }
+      // Rückfallebene für andere Zoom-Fassungen: alle Texte der Zeile, Kopf "Von X an Alle" als Name.
       let texte = sammleTexte(reihe, tiefe: 0).filter { !$0.isEmpty }
       if texte.isEmpty { continue }
       if let kopf = texte.first(where: { istKopf($0) }) {
@@ -92,6 +108,13 @@ enum ChatBaum {
       }
     }
     return out.filter { !$0.text.isEmpty }
+  }
+
+  private static func findeId(_ e: AXUIElement, _ id: String, tiefe: Int) -> AXUIElement? {
+    if wert(e, kAXIdentifierAttribute) == id { return e }
+    if tiefe > 4 { return nil }
+    for k in kinder(e, kAXChildrenAttribute) { if let f = findeId(k, id, tiefe: tiefe + 1) { return f } }
+    return nil
   }
 
   // "Von Anna an Alle", "From Anna to Everyone", "Anna an Alle"
