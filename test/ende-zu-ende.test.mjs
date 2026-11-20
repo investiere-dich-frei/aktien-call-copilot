@@ -138,3 +138,32 @@ test('Zoom-RTMS bis zur Fragekarte', async () => {
     stop(); zoom.wss.close();
   }
 });
+
+test('Mac-Mithörer: Beiträge über /api/beitrag bis zur Fragekarte', async () => {
+  const anfragen = [];
+  const coach = { modell: 'fake', antworte: async ({ beitrag }) => {
+    anfragen.push(beitrag);
+    return { ist_frage: true, frage: beitrag.text, thema: 'T', antwort_stichpunkte: ['a'], antwort_satz: 's', rueckfrage: '', abgedeckt: 'wissensbasis', quellen: [], warnung: '' };
+  } };
+  const { server, stop } = erstelleServer({ COACH_TOKEN: 'testtoken', TRAINER_NAMEN: 'Emilia', coach, wissen: new Wissen([]) });
+  await new Promise((ok) => server.listen(0, ok));
+  const port = server.address().port;
+  const auth = { authorization: 'Bearer testtoken' };
+  try {
+    assert.equal((await post(port, '/api/beitrag', JSON.stringify({ art: 'chat', name: 'Max', text: 'Hallo?' }))).status, 401);
+    assert.equal((await post(port, '/api/beitrag', JSON.stringify({ art: 'video', text: 'x' }), auth)).status, 400);
+    assert.equal((await post(port, '/api/beitrag', JSON.stringify({ art: 'chat', text: '   ' }), auth)).status, 400);
+
+    const fertig = sseSammeln(port, 'testtoken', (e) => e.some((x) => x.typ === 'karte' && x.karte.status === 'offen'));
+    await new Promise((ok) => setTimeout(ok, 100));
+    assert.equal((await post(port, '/api/beitrag', JSON.stringify({ art: 'sprache', name: 'Emilia Bolda', text: 'Diese Aktie ist risikolos.' }), auth)).status, 200);
+    assert.equal((await post(port, '/api/beitrag', JSON.stringify({ art: 'chat', name: 'Max Test', text: 'Wie berechne ich die Dividendenrendite?' }), auth)).status, 200);
+    const ereignisse = await fertig;
+
+    assert.ok(ereignisse.some((e) => e.typ === 'zoom' && e.zustand === 'mithoerer'), 'Mithörer gemeldet');
+    assert.ok(ereignisse.some((e) => e.typ === 'regel'), 'Leitung wird als Trainerin erkannt');
+    assert.deepEqual(anfragen.map((b) => b.text), ['Wie berechne ich die Dividendenrendite?']);
+  } finally {
+    stop();
+  }
+});

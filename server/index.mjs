@@ -5,6 +5,7 @@
 //   POST /api/karte/:id       { status: 'offen'|'beantwortet'|'verworfen' }
 //   POST /api/simulation      { vtt, chat, tempo }  Aufzeichnung abspielen
 //   POST /api/notaus          alles stoppen und vergessen
+//   POST /api/beitrag         Mac-Mithörer: { art: 'sprache'|'chat', name, text } (fertig transkribierter Beitrag)
 // Zugriff auf /api/* nur mit COACH_TOKEN (Header "Authorization: Bearer …" oder ?token=… beim Stream).
 import http from 'node:http';
 import fs from 'node:fs';
@@ -47,10 +48,12 @@ export function erstelleServer(cfg = {}) {
   copilot.on('ereignis', sende);
 
   let simulation = null;
+  let mithoerer = null; // Zeitpunkt des letzten Beitrags vom Mac-Mithörer
 
   const status = () => ({
     ki: coach.modell, wissen: wissen.groesse, kompendium: kompendium.length > 0,
     zoom: zoomBereit ? 'bereit' : 'nicht eingerichtet', streams: [...streams.values()], simulation: Boolean(simulation),
+    mithoerer: mithoerer && Date.now() - mithoerer < 120_000 ? 'verbunden' : 'aus',
   });
 
   const server = http.createServer(async (req, res) => {
@@ -73,6 +76,17 @@ export function erstelleServer(cfg = {}) {
           simulation = spieleAb(ereignisse, (b) => copilot.beitrag(b), { tempo: Math.min(20, Math.max(0.5, Number(tempo) || 1)) });
           setTimeout(() => { simulation = null; }, simulation.dauerSek * 1000 + 3000).unref();
           return json(res, 200, { anzahl: simulation.anzahl, dauerSek: simulation.dauerSek });
+        }
+        if (req.method === 'POST' && url.pathname === '/api/beitrag') {
+          const { art = 'sprache', name = '', text = '' } = JSON.parse(await lies(req) || '{}');
+          const sauber = String(text).replace(/\s+/g, ' ').trim().slice(0, 4000);
+          if (!['sprache', 'chat'].includes(art) || !sauber) return json(res, 400, { fehler: 'art und text nötig' });
+          const n = String(name).trim().slice(0, 80) || 'Teilnehmer:in';
+          const neu = !mithoerer || Date.now() - mithoerer >= 120_000;
+          mithoerer = Date.now();
+          if (neu) sende({ typ: 'zoom', zustand: 'mithoerer', meeting: 'mithoerer' });
+          copilot.beitrag({ art, meeting: 'mithoerer', userId: n, name: n, text: sauber, zeit: Date.now() });
+          return json(res, 200, {});
         }
         if (req.method === 'POST' && url.pathname === '/api/notaus') {
           simulation?.stop(); simulation = null;
